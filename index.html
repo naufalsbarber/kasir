@@ -1,0 +1,1424 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Kasir Naufal's Barber</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#1b1916">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@500;600;700&family=Manrope:wght@500;600;700;800&display=swap">
+<style>
+/* Layout: single phone column — dark brand header, cream work surface, fixed bottom nav. Brand = pricelist (ink, cream, gold). */
+:root{
+  --ink:#1b1916; --ink2:#2a2621; --cream:#f3eee1; --paper:#fbf8f0; --line:#e2d9c6;
+  --gold:#a8895a; --gold2:#c9ad7c; --muted:#7c7365; --ok:#3f7a52; --bad:#b4483b; --warn:#b07a2a;
+  --qris:#3b5f8a;
+  --f-display:"Josefin Sans","Futura","Century Gothic",sans-serif;
+  --f-body:"Manrope","Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--f-body);font-size:15px;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--ink)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.app{max-width:560px;margin:0 auto;min-height:100%;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--ink);color:var(--cream);
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;align-items:center;gap:12px;border-bottom:1px solid #3a342c}
+.top img{width:44px;height:44px;object-fit:contain}
+.top .brand{flex:1;min-width:0}
+.top .brand b{display:block;font-family:var(--f-display);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:15px}
+.top .brand small{display:block;color:var(--gold2);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{font-size:11px;padding:4px 9px;border-radius:99px;border:1px solid #4a4238;color:#d9cfbd;white-space:nowrap}
+.pill.on{border-color:#4f7d5c;color:#9fd1ad}.pill.off{border-color:#8a4a3f;color:#f0a99d}.pill.loc{border-color:#6b5a3b;color:var(--gold2)}
+
+main{padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+h2{font-family:var(--f-display);font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-size:13px;color:var(--muted);margin:0}
+h1{font-family:var(--f-display);font-weight:600;font-size:22px;margin:0;text-wrap:balance}
+.sec{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:10px;align-items:center}
+.between{justify-content:space-between}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat>span:first-child{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:var(--f-display)}
+.stat b{display:block;font-size:20px;margin-top:2px;font-variant-numeric:tabular-nums}
+.stat.hero{grid-column:1/-1;background:var(--ink);color:var(--cream);border-color:var(--ink)}
+.stat.hero>span:first-child{color:var(--gold2)}
+.stat .d{display:block;font-size:12px;margin-top:2px}
+.stat.hero b{font-size:28px}
+
+/* service buttons */
+.svc{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.svc button{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px 14px;text-align:left;display:flex;flex-direction:column;gap:4px;min-height:104px;transition:transform .08s,border-color .15s}
+.svc button:active{transform:scale(.97);border-color:var(--gold)}
+.svc .nm{font-family:var(--f-display);font-weight:600;font-size:18px;color:var(--gold)}
+.svc .pr{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.svc .ds{font-size:11px;color:var(--muted);line-height:1.35}
+
+/* list */
+.list{display:flex;flex-direction:column;background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.item{display:flex;gap:10px;align-items:center;padding:11px 14px;border-top:1px solid var(--line);background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;width:100%}
+.item:first-child{border-top:0}
+.item .main{flex:1;min-width:0}
+.item .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .s{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.item.void .t,.item.void .v{text-decoration:line-through;color:var(--muted)}
+.empty{padding:18px 14px;color:var(--muted);font-size:13.5px;text-align:center}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:6px;vertical-align:1px}
+.tag.tunai{background:#e9e1cc;color:#6b5a3b}.tag.qris{background:#dde6f0;color:var(--qris)}.tag.void{background:#f2dcd8;color:var(--bad)}.tag.gold{background:var(--ink);color:var(--gold2)}
+
+/* forms */
+label.f{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted);font-family:var(--f-display);letter-spacing:.06em;text-transform:uppercase}
+input.in,select.in,textarea.in{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:#fff;font-family:var(--f-body);font-size:16px;text-transform:none;letter-spacing:0;color:var(--ink)}
+textarea.in{min-height:84px;resize:vertical}
+input.big{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:9px 14px;border-radius:99px;border:1px solid var(--line);background:#fff;font-weight:600;font-size:14px}
+.chip.sel{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+.chip.add{border-style:dashed;color:var(--muted);background:transparent}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:#e8e0cf;border-radius:12px;padding:4px;gap:4px}
+.seg button{border:0;background:transparent;padding:10px 6px;border-radius:9px;font-weight:700;font-size:14px;color:var(--muted)}
+.seg button.sel{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(40,30,15,.12)}
+.btn{border:0;border-radius:12px;padding:14px 16px;font-weight:700;font-size:15px;background:var(--ink);color:var(--cream);width:100%;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn.gold{background:var(--gold);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:transparent;color:var(--bad);border:1px solid #e7c6c0}
+.btn.wa{background:#1f7a4d;color:#fff}
+.btn.sm{padding:9px 12px;font-size:13px;width:auto;border-radius:10px}
+.btn:disabled{opacity:.45}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(20,16,12,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center;animation:fade .15s}
+.sheet{background:var(--cream);width:100%;max-width:560px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;
+  padding-block:8px calc(18px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:14px;animation:up .2s ease-out}
+.sheet .grab{width:42px;height:4px;border-radius:4px;background:#cfc4ae;margin:4px auto 0}
+.sheet .hd{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.x{border:0;background:#e8e0cf;width:34px;height:34px;border-radius:99px;font-size:18px;line-height:1}
+.total{display:flex;justify-content:space-between;align-items:baseline;padding:14px;background:var(--ink);color:var(--cream);border-radius:12px}
+.total b{font-size:26px;font-variant-numeric:tabular-nums}
+.total span{color:var(--gold2);font-family:var(--f-display);letter-spacing:.08em;text-transform:uppercase;font-size:12px}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){.scrim,.sheet{animation:none}}
+
+/* nav */
+nav.bot{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--ink);display:flex;justify-content:center;
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+nav.bot .in{display:grid;grid-template-columns:repeat(5,1fr);width:100%;max-width:560px}
+nav.bot button{border:0;background:transparent;color:#a39886;padding:9px 2px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:600;letter-spacing:.02em}
+nav.bot button svg{width:22px;height:22px}
+nav.bot button.sel{color:var(--gold2)}
+
+.kv{display:flex;flex-direction:column}
+.kv div{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px dashed var(--line);font-variant-numeric:tabular-nums}
+.kv div:first-child{border-top:0}
+.kv div.strong{font-weight:800}
+.sig{width:100%;height:150px;background:#fff;border:1px dashed #c9bda5;border-radius:12px;touch-action:none;display:block}
+.toast{position:fixed;left:50%;top:calc(76px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--ink);color:var(--cream);padding:11px 16px;border-radius:12px;z-index:40;font-size:14px;max-width:90%;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.report-img{width:100%;border-radius:12px;border:1px solid var(--line);background:#fff}
+.tabs{display:flex;gap:6px;overflow-x:auto}
+.tabs button{border:1px solid var(--line);background:var(--paper);padding:8px 14px;border-radius:99px;font-weight:700;font-size:13px;white-space:nowrap}
+.tabs button.sel{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+.hint{font-size:12.5px;color:var(--muted);line-height:1.5}
+.badge{min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--bad);color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+.settings-row{display:grid;grid-template-columns:1fr 96px auto;gap:8px;align-items:center}
+.settings-row input{padding:10px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.tbl th{text-align:left;font-family:var(--f-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:6px 4px;border-bottom:1px solid var(--line)}
+.tbl td{padding:7px 4px;border-bottom:1px dashed var(--line)}
+.tbl td.r,.tbl th.r{text-align:right}
+.scrollx{overflow-x:auto}
+.gear{border:1px solid #4a4238;background:transparent;color:#d9cfbd;width:34px;height:34px;border-radius:99px;display:inline-flex;align-items:center;justify-content:center;padding:0;flex:none}
+.gear svg{width:18px;height:18px}
+.gear.sel{color:var(--gold2);border-color:var(--gold)}
+.datebar{display:grid;grid-template-columns:44px 1fr 44px;gap:8px;align-items:stretch}
+.datebar>button{border:1px solid var(--line);background:var(--paper);border-radius:12px;font-size:24px;line-height:1;color:var(--ink)}
+.datebar>button:disabled{opacity:.35}
+.dlabel{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:7px 10px;cursor:pointer;min-width:0}
+.dlabel b{font-size:15px;white-space:nowrap}
+.dlabel small{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ok);font-family:var(--f-display)}
+.dlabel small.past{color:var(--warn)}
+.dlabel input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:0}
+.card.lock{border-color:#e4cfa6;background:#fbf3e2}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>const LOGO = "data:image/webp;base64,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";</script>
+<script>
+/* ============================================================
+   Naufal's Barber — Kasir Digital
+   Single-file vanilla JS. Data: localStorage cache + Supabase (opsional).
+   ============================================================ */
+
+/* ---------- KONFIGURASI SUPABASE ----------
+   Isi dua baris ini setelah project Supabase dibuat
+   (atau isi lewat menu Owner → Atur → Koneksi). */
+const SUPABASE_URL = '';
+const SUPABASE_KEY = '';
+
+/* ---------- util ---------- */
+const $ = s => document.querySelector(s);
+const pad = n => String(n).padStart(2, '0');
+const rp = n => (n < 0 ? '−Rp' : 'Rp') + Math.abs(Math.round(n || 0)).toLocaleString('id-ID');
+const rpk = n => { n = Math.round(n || 0); return n >= 1e6 ? (n / 1e6).toFixed(n % 1e6 ? 2 : 0).replace('.', ',') + 'jt' : n >= 1000 ? Math.round(n / 1000) + 'rb' : String(n); };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const dstr = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const today = () => dstr(new Date());
+const nowISO = () => new Date().toISOString();
+const jam = iso => { const d = new Date(iso); return pad(d.getHours()) + '.' + pad(d.getMinutes()); };
+const uid = p => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+const BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+const fmtTgl = s => { const d = new Date(s + 'T00:00:00'); return HARI[d.getDay()] + ', ' + d.getDate() + ' ' + BULAN[d.getMonth()] + ' ' + d.getFullYear(); };
+const fmtTglS = s => { const d = new Date(s + 'T00:00:00'); return d.getDate() + ' ' + BULAN[d.getMonth()].slice(0, 3) + ' ' + d.getFullYear(); };
+const fmtBln = ym => { const [y, m] = ym.split('-'); return BULAN[+m - 1] + ' ' + y; };
+const daysBetween = (a, b) => Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 864e5);
+const addDays = (s, n) => { const d = new Date(s + 'T00:00:00'); d.setDate(d.getDate() + n); return dstr(d); };
+const normWA = s => { let d = String(s || '').replace(/\D/g, ''); if (!d) return ''; if (d.startsWith('0')) d = '62' + d.slice(1); else if (d.startsWith('8')) d = '62' + d; return d; };
+const showWA = d => d ? '0' + String(d).replace(/^62/, '') : '';
+const parseNum = s => +String(s || '').replace(/\D/g, '') || 0;
+const lsGet = (k, def) => { try { const v = localStorage.getItem(k); return v == null ? def : JSON.parse(v); } catch (e) { return def; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } };
+const ssGet = k => { try { return sessionStorage.getItem(k); } catch (e) { return null; } };
+const ssSet = (k, v) => { try { sessionStorage.setItem(k, v); } catch (e) { } };
+
+function toast(msg, ms = 2200) {
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), ms);
+}
+
+/* ============================================================
+   DATA STORE
+   Semua data disimpan sebagai "dokumen": {id, col, tgl, data}.
+   Lokal: localStorage. Online: tabel nb_docs di Supabase.
+   ============================================================ */
+const CACHE_DAYS = 75;
+const DB = {
+  docs: {}, pending: {}, cfg: { url: '', key: '' }, status: 'local', lastSync: null,
+  init() {
+    this.docs = lsGet('nb_docs', {});
+    this.pending = lsGet('nb_pending', {});
+    const c = lsGet('nb_cfg', null);
+    this.cfg = c && c.url ? c : { url: SUPABASE_URL, key: SUPABASE_KEY };
+    this.status = this.online() ? 'sync' : 'local';
+  },
+  online() { return !!(this.cfg.url && this.cfg.key); },
+  headers() {
+    const h = { apikey: this.cfg.key, 'Content-Type': 'application/json' };
+    if (!this.cfg.key.startsWith('sb_')) h.Authorization = 'Bearer ' + this.cfg.key;
+    return h;
+  },
+  base() { return this.cfg.url.replace(/\/+$/, '') + '/rest/v1/nb_docs'; },
+  saveCache() {
+    const cut = addDays(today(), -CACHE_DAYS), out = {}, keepAll = !this.online();
+    for (const [id, d] of Object.entries(this.docs)) if (keepAll || !d.tgl || d.tgl >= cut || this.pending[id]) out[id] = d;
+    lsSet('nb_docs', out); lsSet('nb_pending', this.pending);
+  },
+  list(col) { return Object.values(this.docs).filter(d => d.col === col).map(d => d.data); },
+  get(id) { return this.docs[id]?.data; },
+  put(col, data, tgl = null, ts = null) {
+    const doc = { id: data.id, col, tgl, data, updated_at: ts || nowISO() };
+    this.docs[data.id] = doc; this.pending[data.id] = doc; this.saveCache(); this.flush();
+    return data;
+  },
+  async flush() {
+    if (!this.online() || this._flushing) { setStatus(); return; }
+    const batch = Object.values(this.pending); if (!batch.length) { this.status = 'on'; setStatus(); return; }
+    this._flushing = true; this.status = 'sync'; setStatus();
+    try {
+      const r = await fetch(this.base(), { method: 'POST', headers: { ...this.headers(), Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(batch) });
+      if (!r.ok) throw new Error(r.status + ' ' + (await r.text()).slice(0, 160));
+      for (const d of batch) if (this.pending[d.id] === d) delete this.pending[d.id];
+      this.saveCache(); this.status = 'on'; this.lastSync = new Date();
+    } catch (e) { this.status = 'off'; this.lastErr = String(e.message || e); }
+    this._flushing = false; setStatus();
+    if (this.status === 'on' && Object.keys(this.pending).length) this.flush();
+  },
+  async fetchWhere(q) {
+    const out = []; let off = 0;
+    for (; ;) {
+      const r = await fetch(this.base() + '?select=id,col,tgl,data,updated_at&' + q + '&order=id&limit=1000&offset=' + off, { headers: this.headers() });
+      if (!r.ok) throw new Error(r.status + ' ' + (await r.text()).slice(0, 160));
+      const rows = await r.json(); out.push(...rows); if (rows.length < 1000) break; off += 1000;
+    }
+    return out;
+  },
+  merge(rows) {
+    // last-write-wins: data lokal yang belum terkirim hanya menang kalau lebih baru
+    for (const d of rows) {
+      const p = this.pending[d.id];
+      if (!p || new Date(d.updated_at) >= new Date(p.updated_at)) { this.docs[d.id] = d; delete this.pending[d.id]; }
+    }
+  },
+  async pull() {
+    if (!this.online()) { this.status = 'local'; setStatus(); return; }
+    try {
+      const from = addDays(today(), -CACHE_DAYS);
+      const rows = await this.fetchWhere('or=(tgl.is.null,tgl.gte.' + from + ')');
+      this.merge(rows); applyRemoteReset(); this.saveCache(); this.status = Object.keys(this.pending).length ? 'sync' : 'on'; this.lastSync = new Date();
+      this.flush();
+    } catch (e) { this.status = 'off'; this.lastErr = String(e.message || e); }
+    setStatus();
+  },
+  async remove(q) {   // hapus di server, q = filter PostgREST
+    if (!this.online()) return;
+    const r = await fetch(this.base() + '?' + q, { method: 'DELETE', headers: { ...this.headers(), Prefer: 'return=minimal' } });
+    if (!r.ok) throw new Error(r.status + ' ' + (await r.text()).slice(0, 160));
+  },
+  async fetchAll() { return this.online() ? this.fetchWhere('id=not.is.null') : Object.values(this.docs); },
+  async loadRange(from, to) {
+    if (!this.online()) return;
+    const rows = await this.fetchWhere('tgl=gte.' + from + '&tgl=lte.' + to);
+    this.merge(rows);
+  }
+};
+
+function setStatus() {
+  const el = $('#status'); if (!el) return;
+  const n = Object.keys(DB.pending).length;
+  const map = { local: ['loc', 'Mode lokal'], on: ['on', 'Online'], sync: ['', 'Menyimpan…'], off: ['off', 'Offline' + (n ? ' · ' + n + ' antre' : '')] };
+  const [c, t] = map[DB.status] || map.local;
+  el.className = 'pill ' + c; el.textContent = t;
+}
+
+/* ---------- master data ---------- */
+const DEF_SETTINGS = {
+  id: 'settings', toko: "Naufal's Barber", tagline: 'Masuk Kucel, Keluar Ganteng',
+  alamat: 'Jl. Ahmad No. 09, Pamoyanan, Cicendo, Bandung', wa: '0813-9466-5577',
+  ig: '@naufalsbarber_bdg', tiktok: '@naufalbarber_', maps: 'https://maps.app.goo.gl/QbyV82cy9jwTMGSu8',
+  ownerPass: '1234', reminderDays: 28, prefix: 'NB',
+  tplFooter: 'Terima kasih atas kunjungan Anda di {toko}. Kami tunggu kedatangan berikutnya.\n\nKritik & saran: {wa}\nUlas kami di Google Maps: {maps}\nIG {ig} | TikTok {tiktok}',
+  tplReminder: 'Halo Kak {nama}! Terakhir cukur di {toko} {lama} nih 💈\nRambut udah mulai gondrong belum? Yuk rapihin lagi, kami buka setiap hari jam 08.00–22.00.\n\n📍 {maps}'
+};
+const DEF_LAYANAN = [
+  { id: 'lay_kids', nama: 'Kids Cut', harga: 20000, ket: 'Potong rambut saja (anak)', aktif: true, urut: 1 },
+  { id: 'lay_basic', nama: 'Basic Cut', harga: 25000, ket: 'Potong rambut saja (dewasa)', aktif: true, urut: 2 },
+  { id: 'lay_regular', nama: 'Regular Cut', harga: 30000, ket: 'Potong, keramas, hairtonic, styling pomade', aktif: true, urut: 3 },
+  { id: 'lay_premium', nama: 'Premium Cut', harga: 35000, ket: 'Potong, keramas, pijat kepala, hairtonic, pomade', aktif: true, urut: 4 }
+];
+const KAT_PG = ['Perlengkapan', 'Kebersihan', 'Konsumsi', 'Listrik & Air', 'Transport', 'Lainnya'];
+
+const OLD_REMINDER = 'Halo Kak {nama}! Udah {minggu} minggu nih sejak terakhir cukur di {toko} 💈\nRambut udah mulai gondrong belum? Yuk rapihin lagi, kami buka setiap hari jam 08.00–22.00.\n\n📍 {maps}';
+const SEED_TS = '2000-01-01T00:00:00.000Z';   // data bawaan selalu kalah dari data online
+function seedIfEmpty() {
+  if (!DB.get('settings')) DB.put('settings', { ...DEF_SETTINGS }, null, SEED_TS);
+  else { const s = DB.get('settings'); let ch = false; if (s.tplReminder === OLD_REMINDER) { s.tplReminder = DEF_SETTINGS.tplReminder; ch = true; } for (const k in DEF_SETTINGS) if (s[k] === undefined) { s[k] = DEF_SETTINGS[k]; ch = true; } if (ch) DB.put('settings', s, null, DB.docs.settings?.updated_at); }
+  if (!DB.list('layanan').length) DEF_LAYANAN.forEach(l => DB.put('layanan', { ...l }, null, SEED_TS));
+}
+const ST = () => DB.get('settings') || DEF_SETTINGS;
+const layananAktif = () => DB.list('layanan').filter(l => l.aktif).sort((a, b) => (a.urut || 0) - (b.urut || 0));
+const kapsterAktif = () => DB.list('kapster').filter(k => k.aktif).sort((a, b) => a.nama.localeCompare(b.nama));
+const txOn = tgl => DB.list('transaksi').filter(t => t.tgl === tgl).sort((a, b) => a.at.localeCompare(b.at));
+const pgOn = tgl => DB.list('pengeluaran').filter(p => p.tgl === tgl).sort((a, b) => a.at.localeCompare(b.at));
+const kasOf = tgl => DB.get('kas_' + tgl);
+const fill = (tpl, o) => String(tpl || '').replace(/\{(\w+)\}/g, (m, k) => o[k] ?? m);
+const tplVars = () => { const s = ST(); return { toko: s.toko, wa: s.wa, maps: s.maps, ig: s.ig, tiktok: s.tiktok, alamat: s.alamat }; };
+
+function addLog(obj, aksi, detail) {
+  obj.log = obj.log || []; obj.log.push({ at: nowISO(), oleh: S.kasir || 'Owner', aksi, detail });
+}
+function nextNota(tgl) {
+  const ym = tgl.slice(0, 7); let max = 0;
+  for (const t of DB.list('transaksi')) if (t.tgl.slice(0, 7) === ym) { const n = parseInt(String(t.nota).replace(/\D/g, ''), 10); if (n > max) max = n; }
+  return (ST().prefix || 'NB') + String(max + 1).padStart(4, '0');
+}
+
+/* ============================================================
+   STATE + SHELL
+   ============================================================ */
+const S = { date: today(), followToday: true, tab: 'kasir', kasir: lsGet('nb_kasir', ''), owner: ssGet('nb_owner') === '1', ownerTab: 'atur', lapTab: 'harian', pelFilter: 'semua', pelQ: '', repMonth: today().slice(0, 7) };
+
+const ICON = {
+  kasir: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></svg>',
+  pengeluaran: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>',
+  pelanggan: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.6.8 2.6 2.6 3 5.2"/></svg>',
+  tutup: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M8 3h8l2 4H6z"/></svg>',
+  laporan: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+  gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>'
+};
+const NAV = [['kasir', 'Kasir'], ['pengeluaran', 'Pengeluaran'], ['pelanggan', 'Pelanggan'], ['tutup', 'Tutup Kas'], ['laporan', 'Laporan']];
+
+function shell() {
+  document.getElementById('root').innerHTML = `
+  <div class="app">
+    <header class="top">
+      <img src="${LOGO}" alt="">
+      <div class="brand"><b>${esc(ST().toko)}</b><small id="sub"></small></div>
+      <span id="status" class="pill"></span>
+      <button id="gear" class="gear" aria-label="Area owner: riwayat & pengaturan">${ICON.gear}</button>
+    </header>
+    <main id="main"></main>
+  </div>
+  <nav class="bot"><div class="in">${NAV.map(([k, l]) => `<button data-tab="${k}">${ICON[k]}<span>${l}</span></button>`).join('')}</div></nav>`;
+  document.querySelectorAll('nav.bot button').forEach(b => b.onclick = () => { S.tab = b.dataset.tab; closeSheet(); render(); window.scrollTo(0, 0); });
+  $('#gear').onclick = () => { S.tab = 'owner'; closeSheet(); render(); window.scrollTo(0, 0); };
+  setStatus();
+}
+function render() {
+  document.querySelectorAll('nav.bot button').forEach(b => b.classList.toggle('sel', b.dataset.tab === S.tab));
+  $('#sub').textContent = (S.kasir ? 'Kasir: ' + S.kasir + ' · ' : '') + fmtTgl(today());
+  $('#gear').classList.toggle('sel', S.tab === 'owner');
+  ({ kasir: vKasir, pengeluaran: vPengeluaran, pelanggan: vPelanggan, tutup: vTutup, laporan: vLaporan, owner: vOwner })[S.tab]();
+}
+
+/* ---------- sheet & dialog ---------- */
+function openSheet(html, onMount, { locked = false } = {}) {
+  closeSheet();
+  const w = document.createElement('div'); w.className = 'scrim'; w.id = 'scrim';
+  w.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div>`;
+  if (!locked) w.addEventListener('click', e => { if (e.target === w) closeSheet(); });
+  document.body.appendChild(w); onMount && onMount(w.querySelector('.sheet'));
+  return w.querySelector('.sheet');
+}
+function closeSheet() { $('#scrim')?.remove(); }
+function ask({ title, body = '', input = null, ok = 'OK', danger = false, cancel = 'Batal' }) {
+  return new Promise(res => {
+    const sh = openSheet(`<div class="hd"><h1>${esc(title)}</h1></div>
+      ${body ? `<div class="hint">${body}</div>` : ''}
+      ${input ? `<label class="f">${esc(input.label)}<${input.multi ? 'textarea' : 'input'} id="askIn" class="in" ${input.type ? `type="${input.type}"` : ''} placeholder="${esc(input.ph || '')}" value="${esc(input.value || '')}">${input.multi ? esc(input.value || '') + '</textarea>' : ''}</label>` : ''}
+      <div class="grid2"><button class="btn ghost" id="askNo">${cancel}</button><button class="btn ${danger ? 'danger' : ''}" id="askOk">${ok}</button></div>`);
+    const fin = v => { closeSheet(); res(v); };
+    sh.querySelector('#askNo').onclick = () => fin(null);
+    sh.querySelector('#askOk').onclick = () => {
+      if (!input) return fin(true);
+      const v = sh.querySelector('#askIn').value.trim();
+      if (input.required && !v) { toast(input.required); return; }
+      fin(v);
+    };
+    setTimeout(() => sh.querySelector('#askIn')?.focus(), 250);
+  });
+}
+
+/* ============================================================
+   TAB: KASIR
+   ============================================================ */
+/* ---------- navigasi tanggal (dipakai Kasir, Pengeluaran, Tutup Kas, Laporan Harian) ---------- */
+const isToday = () => S.date === today();
+const kasLocked = tgl => !!kasOf(tgl)?.tutup;
+function dateBar() {
+  const t = isToday(), d = new Date(S.date + 'T00:00:00');
+  const rel = t ? 'Hari ini' : S.date === addDays(today(), -1) ? 'Kemarin' : daysBetween(S.date, today()) + ' hari lalu';
+  return `<div class="datebar">
+    <button id="dPrev" aria-label="Hari sebelumnya">‹</button>
+    <label class="dlabel"><b>${HARI[d.getDay()]}, ${fmtTglS(S.date)}</b><small class="${t ? '' : 'past'}">${rel}</small>
+      <input id="dIn" type="date" value="${S.date}" max="${today()}" aria-label="Pilih tanggal"></label>
+    <button id="dNext" aria-label="Hari berikutnya" ${t ? 'disabled' : ''}>›</button>
+  </div>${t ? '' : '<button class="btn ghost sm" id="dToday" style="width:100%">Kembali ke hari ini</button>'}`;
+}
+async function setDate(d) {
+  if (!d) return; if (d > today()) d = today();
+  S.date = d; S.followToday = d === today();
+  try { if (d < addDays(today(), -CACHE_DAYS)) { toast('Memuat data…'); await DB.loadRange(d, d); } } catch (e) { }
+  render();
+}
+function bindDateBar() {
+  $('#dPrev') && ($('#dPrev').onclick = () => setDate(addDays(S.date, -1)));
+  $('#dNext') && ($('#dNext').onclick = () => setDate(addDays(S.date, 1)));
+  $('#dIn') && ($('#dIn').onchange = e => setDate(e.target.value));
+  $('#dToday') && ($('#dToday').onclick = () => setDate(today()));
+}
+function lockNote(tgl, what) {
+  const k = kasOf(tgl);
+  if (!isToday() && !k) return `<div class="card hint">Tidak ada kas yang dibuka pada ${fmtTgl(tgl)}.</div>`;
+  if (k?.tutup) return `<div class="card lock"><b>Kas ${isToday() ? 'hari ini' : 'tanggal ini'} sudah ditutup</b><div class="small muted">oleh ${esc(k.tutup.kasir)} jam ${jam(k.tutup.at)}. ${what} tidak bisa ditambah atau diubah lagi. Kalau masih ada, buka kembali kas di menu Tutup Kas.</div></div>`;
+  return '';
+}
+
+function vKasir() {
+  const m = $('#main'), tgl = S.date, kas = kasOf(tgl), now = isToday();
+  if (!kas && now) return vBukaKas(m);
+  const tx = txOn(tgl), ok = tx.filter(t => !t.batal);
+  const sum = f => ok.filter(f).reduce((a, t) => a + t.total, 0);
+  const total = sum(() => true);
+  const closed = !!kas?.tutup, canInput = now && kas && !closed;
+  m.innerHTML = `
+    ${dateBar()}
+    ${closed ? `<div class="card row between"><div><b>Kas ${now ? 'hari ini' : 'tanggal ini'} sudah ditutup</b><div class="small muted">oleh ${esc(kas.tutup.kasir)} · ${jam(kas.tutup.at)}</div></div><button class="btn sm ghost" id="goTutup">Lihat</button></div>` : !kas ? lockNote(tgl) : ''}
+    ${!now && kas && !closed ? `<div class="card lock"><b>Kas tanggal ini belum ditutup</b><div class="small muted">Tutup lewat menu Tutup Kas supaya laporannya lengkap.</div></div>` : ''}
+    <div class="stats">
+      <div class="stat hero"><span>Pemasukan ${now ? 'hari ini' : fmtTglS(tgl)}</span><b>${rp(total)}</b></div>
+      <div class="stat"><span>Kepala</span><b>${ok.length}</b></div>
+      <div class="stat"><span>Kasir</span><b style="font-size:16px;padding-top:4px">${esc(now ? (S.kasir || '–') : (kas?.kasir || '–'))} ${now ? '<button class="btn sm ghost" id="gantiKasir" style="display:inline-flex;padding:3px 8px;font-size:11px;vertical-align:2px">Ganti</button>' : ''}</b></div>
+      <div class="stat"><span>Tunai</span><b>${rp(sum(t => t.bayar === 'Tunai'))}</b></div>
+      <div class="stat"><span>QRIS</span><b>${rp(sum(t => t.bayar === 'QRIS'))}</b></div>
+    </div>
+    ${canInput ? `<section class="sec"><h2>Pilih layanan</h2>
+      <div class="svc">${layananAktif().map(l => `<button data-lay="${l.id}"><span class="nm">${esc(l.nama)}</span><span class="pr">${rp(l.harga)}</span><span class="ds">${esc(l.ket || '')}</span></button>`).join('')}</div>
+    </section>` : ''}
+    <section class="sec"><div class="row between"><h2>Transaksi ${now ? 'hari ini' : 'tanggal ini'}</h2><span class="small muted">${tx.length} nota</span></div>
+      <div class="list">${tx.length ? tx.slice().reverse().map(txRow).join('') : `<div class="empty">${canInput ? 'Belum ada transaksi. Pilih layanan di atas untuk mulai.' : 'Tidak ada transaksi.'}</div>`}</div>
+    </section>`;
+  bindDateBar();
+  m.querySelectorAll('[data-lay]').forEach(b => b.onclick = () => openTx(DB.get(b.dataset.lay)));
+  m.querySelectorAll('[data-tx]').forEach(b => b.onclick = () => openTxDetail(DB.get(b.dataset.tx)));
+  $('#gantiKasir') && ($('#gantiKasir').onclick = pilihKasir);
+  $('#goTutup') && ($('#goTutup').onclick = () => { S.tab = 'tutup'; render(); });
+}
+function txRow(t) {
+  return `<button class="item ${t.batal ? 'void' : ''}" data-tx="${t.id}">
+    <div class="main"><div class="t">${esc(t.layanan)} · ${esc(t.kapster)}</div>
+    <div class="s">${t.nota} · ${jam(t.at)}${t.pelanggan ? ' · ' + esc(t.pelanggan) : ''}${t.diskon ? ' · promo ' + esc(t.ketPromo || '') : ''}</div></div>
+    ${t.batal ? '<span class="tag void">BATAL</span>' : `<span class="tag ${t.bayar === 'QRIS' ? 'qris' : 'tunai'}">${t.bayar}</span>`}
+    <div class="v">${rp(t.total)}</div></button>`;
+}
+
+function kasirChips(sel, id = 'kchips', noAdd = false) {
+  const ks = kapsterAktif();
+  return `<div class="chips" id="${id}">${ks.map(k => `<button class="chip ${k.nama === sel ? 'sel' : ''}" data-k="${esc(k.nama)}">${esc(k.nama)}</button>`).join('')}${noAdd ? '' : '<button class="chip add" data-add="1">+ Tambah nama</button>'}</div>`;
+}
+async function tambahKapster() {
+  const n = await ask({ title: 'Tambah kapster', input: { label: 'Nama', ph: 'mis. Reza', required: 'Isi namanya dulu' }, ok: 'Simpan' });
+  if (!n) return null;
+  const ada = DB.list('kapster').find(k => k.nama.toLowerCase() === n.toLowerCase());
+  if (ada) { if (!ada.aktif) { ada.aktif = true; DB.put('kapster', ada); } return ada.nama; }
+  DB.put('kapster', { id: uid('kap'), nama: n, aktif: true });
+  toast(n + ' ditambahkan'); return n;
+}
+function bindChips(root, id, onPick) {
+  root.querySelectorAll('#' + id + ' .chip').forEach(c => c.onclick = async () => {
+    if (c.dataset.add) { const n = await tambahKapster(); onPick(n, true); return; }
+    onPick(c.dataset.k, false);
+  });
+}
+
+function vBukaKas(m) {
+  const kemarin = Object.values(DB.docs).filter(d => d.col === 'kas' && d.tgl < today()).sort((a, b) => b.tgl.localeCompare(a.tgl))[0]?.data;
+  const saran = kemarin?.tutup ? kemarin.tutup.sisa : '';
+  let sel = S.kasir;
+  const draw = () => {
+    m.innerHTML = `
+    ${dateBar()}
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:6px">
+      <img src="${LOGO}" alt="${esc(ST().toko)}" style="width:150px;max-width:50%;filter:drop-shadow(0 6px 14px rgba(40,30,15,.25))">
+      <div style="font-family:var(--f-display);letter-spacing:.14em;text-transform:uppercase;font-size:12px;color:var(--gold)">${esc(ST().tagline)}</div>
+    </div>
+    <div class="card sec">
+      <h1>Buka Kas</h1>
+      <div class="hint">${fmtTgl(today())}. Pilih siapa yang pegang kasir, lalu hitung uang modal di laci.</div>
+      <label class="f">Kasir</label>${kasirChips(sel)}
+      ${!kapsterAktif().length ? '<div class="hint">Belum ada nama kapster. Tambahkan dulu dengan tombol di atas.</div>' : ''}
+      <label class="f">Modal awal di laci<input id="modal" class="in big" inputmode="numeric" placeholder="0" value="${saran !== '' ? Number(saran).toLocaleString('id-ID') : ''}"></label>
+      ${saran !== '' ? `<div class="hint">Sisa kas penutupan terakhir (${fmtTglS(kemarin.tgl)}): <b>${rp(saran)}</b></div>` : ''}
+      <button class="btn gold" id="bukaBtn">Buka Kas</button>
+    </div>`;
+    bindChips(m, 'kchips', (n) => { if (n) sel = n; draw(); });
+    bindDateBar(); moneyInput($('#modal'));
+    $('#bukaBtn').onclick = () => {
+      if (!sel) return toast('Pilih kasir dulu');
+      const tgl = today();
+      DB.put('kas', { id: 'kas_' + tgl, tgl, kasir: sel, modal: parseNum($('#modal').value), bukaAt: nowISO(), tutup: null, log: [] }, tgl);
+      S.kasir = sel; lsSet('nb_kasir', sel); toast('Kas dibuka. Selamat bekerja!'); render();
+    };
+  };
+  draw();
+}
+function moneyInput(el) {
+  if (!el) return;
+  el.addEventListener('input', () => { const raw = String(el.value).replace(/\D/g, ''); el.value = raw === '' ? '' : (+raw).toLocaleString('id-ID'); });
+}
+function pilihKasir() {
+  let sel = S.kasir;
+  const sh = openSheet(`<div class="hd"><h1>Ganti kasir</h1><button class="x" id="cx">×</button></div><div id="kc"></div><button class="btn" id="ok">Simpan</button>`);
+  const draw = () => { sh.querySelector('#kc').innerHTML = kasirChips(sel); bindChips(sh, 'kchips', n => { if (n) sel = n; draw(); }); };
+  draw();
+  sh.querySelector('#cx').onclick = closeSheet;
+  sh.querySelector('#ok').onclick = () => { if (!sel) return; S.kasir = sel; lsSet('nb_kasir', sel); closeSheet(); render(); toast('Kasir: ' + sel); };
+}
+
+/* ---------- form transaksi ---------- */
+function openTx(lay) {
+  const T = { lay, kapster: '', bayar: '', pel: null, baru: { nama: '', wa: '' }, diskon: 0, ket: '', q: '' };
+  const sh = openSheet('<div id="txb"></div>');
+  const draw = () => {
+    const total = Math.max(0, lay.harga - T.diskon);
+    const q = T.q.trim().toLowerCase(), qd = q.replace(/\D/g, '');
+    const hits = q.length >= 2 ? DB.list('pelanggan').filter(p => p.nama.toLowerCase().includes(q) || (qd.length >= 3 && (p.wa || '').includes(qd.replace(/^0/, '')))).slice(0, 5) : [];
+    sh.querySelector('#txb').innerHTML = `
+      <div class="sec">
+      <div class="hd"><div><h2>Transaksi baru</h2><h1>${esc(lay.nama)} · ${rp(lay.harga)}</h1></div><button class="x" id="cx">×</button></div>
+      <label class="f">Kapster</label>${kasirChips(T.kapster, 'kapchips')}
+      <label class="f">Pembayaran</label>
+      <div class="seg"><button data-b="Tunai" class="${T.bayar === 'Tunai' ? 'sel' : ''}">Tunai</button><button data-b="QRIS" class="${T.bayar === 'QRIS' ? 'sel' : ''}">QRIS</button></div>
+      <label class="f">Pelanggan <span style="text-transform:none;letter-spacing:0">(opsional)</span></label>
+      ${T.pel ? `<div class="card row between" style="padding:10px 12px"><div><b>${esc(T.pel.nama)}</b><div class="small muted">${showWA(T.pel.wa) || 'tanpa WA'} · ${T.pel.visits || 0}× datang</div></div><button class="btn sm ghost" id="pelX">Ganti</button></div>` : `
+        <input id="pq" class="in" placeholder="Cari nama / no WA pelanggan lama" value="${esc(T.q)}" autocomplete="off">
+        ${hits.length ? `<div class="list">${hits.map(p => `<button class="item" data-p="${p.id}"><div class="main"><div class="t">${esc(p.nama)}</div><div class="s">${showWA(p.wa) || 'tanpa WA'} · terakhir ${p.lastVisit ? fmtTglS(p.lastVisit) : '-'}</div></div></button>`).join('')}</div>` : ''}
+        <div class="grid2"><input id="bn" class="in" placeholder="Nama pelanggan baru" value="${esc(T.baru.nama)}"><input id="bw" class="in" inputmode="tel" placeholder="No WA (08…)" value="${esc(T.baru.wa)}"></div>`}
+      <details ${T.diskon ? 'open' : ''}><summary class="small muted" style="padding:4px 0">Promo / diskon</summary>
+        <div class="grid2" style="margin-top:8px"><input id="dk" class="in" inputmode="numeric" placeholder="Potongan Rp" value="${T.diskon ? T.diskon.toLocaleString('id-ID') : ''}"><input id="dkk" class="in" placeholder="Keterangan, mis. Pelajar" value="${esc(T.ket)}"></div>
+      </details>
+      <div class="total"><span>Total</span><b>${rp(total)}</b></div>
+      <button class="btn gold" id="save">Simpan Transaksi</button>
+      </div>`;
+    sh.querySelector('#cx').onclick = closeSheet;
+    bindChips(sh, 'kapchips', (n) => { if (n) { T.kapster = n; lsSet('nb_lastKap', n); } draw(); });
+    sh.querySelectorAll('[data-b]').forEach(b => b.onclick = () => { T.bayar = b.dataset.b; draw(); });
+    const pq = sh.querySelector('#pq');
+    if (pq) { pq.oninput = () => { T.q = pq.value; const pos = pq.selectionStart; draw(); const n = sh.querySelector('#pq'); n.focus(); n.setSelectionRange(pos, pos); }; }
+    sh.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { T.pel = DB.get(b.dataset.p); draw(); });
+    sh.querySelector('#pelX') && (sh.querySelector('#pelX').onclick = () => { T.pel = null; T.q = ''; draw(); });
+    const bn = sh.querySelector('#bn'), bw = sh.querySelector('#bw');
+    bn && (bn.oninput = () => T.baru.nama = bn.value); bw && (bw.oninput = () => T.baru.wa = bw.value);
+    const dk = sh.querySelector('#dk'), dkk = sh.querySelector('#dkk');
+    dk.oninput = () => { T.diskon = Math.min(parseNum(dk.value), lay.harga); dk.value = T.diskon ? T.diskon.toLocaleString('id-ID') : ''; sh.querySelector('.total b').textContent = rp(lay.harga - T.diskon); };
+    dkk.oninput = () => T.ket = dkk.value;
+    sh.querySelector('#save').onclick = () => saveTx(T);
+  };
+  draw();
+}
+
+function saveTx(T) {
+  if (!T.kapster) return toast('Pilih kapster dulu');
+  if (!T.bayar) return toast('Pilih metode pembayaran: Tunai atau QRIS');
+  if (T.diskon && !T.ket.trim()) return toast('Isi keterangan promo');
+  let pel = T.pel;
+  if (!pel && T.baru.nama.trim()) {
+    const wa = normWA(T.baru.wa);
+    if (T.baru.wa && wa.length < 10) return toast('Nomor WA belum lengkap');
+    pel = wa ? DB.list('pelanggan').find(p => p.wa === wa) : null;
+    if (!pel) pel = DB.put('pelanggan', { id: uid('pel'), nama: T.baru.nama.trim(), wa, visits: 0, lastVisit: null, kapCount: {}, createdAt: nowISO() });
+  }
+  const tgl = today();
+  const baru = pel ? !(pel.visits > 0) : null;
+  const tx = {
+    id: uid('tx'), nota: nextNota(tgl), tgl, at: nowISO(), layananId: T.lay.id, layanan: T.lay.nama, harga: T.lay.harga,
+    diskon: T.diskon, ketPromo: T.diskon ? T.ket.trim() : '', total: Math.max(0, T.lay.harga - T.diskon), kapster: T.kapster,
+    kasir: S.kasir, bayar: T.bayar, pelangganId: pel?.id || null, pelanggan: pel?.nama || '', wa: pel?.wa || '', pelangganBaru: baru,
+    batal: false, log: []
+  };
+  DB.put('transaksi', tx, tgl);
+  if (pel) { pel.visits = (pel.visits || 0) + 1; pel.lastVisit = tgl; pel.kapCount = pel.kapCount || {}; pel.kapCount[T.kapster] = (pel.kapCount[T.kapster] || 0) + 1; DB.put('pelanggan', pel); }
+  render();
+  let next = '';
+  const sh = openSheet(`<div class="hd"><h1>Tersimpan ✓</h1></div>
+    <div class="card kv"><div><span>Nota</span><b>${tx.nota}</b></div><div><span>${esc(tx.layanan)}</span><b>${rp(tx.harga)}</b></div>${tx.diskon ? `<div><span>Promo (${esc(tx.ketPromo)})</span><b>−${rp(tx.diskon)}</b></div>` : ''}<div class="strong"><span>Total · ${tx.bayar}</span><span>${rp(tx.total)}</span></div></div>
+    ${tx.wa ? `<a class="btn wa" id="waS" href="${waLink(tx.wa, strukText(tx))}" target="_blank" rel="noopener">Kirim struk ke WA ${esc(tx.pelanggan)}</a>` : `<div class="hint">Struk WA tidak bisa dikirim karena nomor WA pelanggan tidak diisi.</div>`}
+    <div class="card sec lock"><b>Siapa yang pegang kasir sekarang?</b>
+      <div class="small muted">Sebelumnya: ${esc(S.kasir || '-')}. Pilih lagi supaya transaksi berikutnya tercatat atas nama yang benar.</div>
+      <div id="nk"></div></div>
+    <button class="btn" id="done" disabled>Pilih kasir dulu</button>`, null, { locked: true });
+  const drawK = () => {
+    sh.querySelector('#nk').innerHTML = kasirChips(next, 'nkchips', true);
+    bindChips(sh, 'nkchips', n => { if (n) next = n; drawK(); });
+    const d = sh.querySelector('#done'); d.disabled = !next; d.textContent = next ? 'Selesai · kasir ' + next : 'Pilih kasir dulu';
+  };
+  drawK();
+  sh.querySelector('#done').onclick = () => {
+    if (!next) return;
+    if (next !== S.kasir) toast('Kasir sekarang: ' + next);
+    S.kasir = next; lsSet('nb_kasir', next); closeSheet(); render();
+  };
+}
+
+const waLink = (wa, text) => 'https://wa.me/' + wa + '?text=' + encodeURIComponent(text);
+function strukText(t) {
+  const W = 30, L = '-'.repeat(W), s = ST();
+  const kv = (a, b) => { a = String(a); b = String(b); const sp = W - a.length - b.length; return sp >= 1 ? a + ' '.repeat(sp) + b : a + '\n' + ' '.repeat(Math.max(0, W - b.length)) + b; };
+  const d = new Date(t.at);
+  const body = [
+    s.toko.toUpperCase(), s.alamat, L,
+    kv('No. Nota', t.nota), kv('Tanggal', pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + jam(t.at)),
+    kv('Kapster', t.kapster), t.pelanggan ? kv('Pelanggan', t.pelanggan.slice(0, 18)) : null, L,
+    kv(t.layanan, rp(t.harga)), t.diskon ? kv('Diskon (' + t.ketPromo.slice(0, 12) + ')', '-' + rp(t.diskon)) : null,
+    kv('TOTAL', rp(t.total)), kv('Pembayaran', t.bayar), L
+  ].filter(x => x != null).join('\n');
+  return '```\n' + body + '\n```\n' + fill(s.tplFooter, { ...tplVars(), nama: t.pelanggan });
+}
+
+/* ---------- detail / edit / batal ---------- */
+function openTxDetail(t) {
+  const sh = openSheet(`<div class="hd"><div><h2>${t.nota} · ${jam(t.at)}</h2><h1>${esc(t.layanan)}</h1></div><button class="x" id="cx">×</button></div>
+    ${t.batal ? `<div class="card" style="border-color:#e7c6c0"><b style="color:var(--bad)">Dibatalkan</b><div class="small muted">Alasan: ${esc(t.batalAlasan)} · ${esc(t.batalOleh)} ${jam(t.batalAt)}</div></div>` : ''}
+    <div class="card kv">
+      <div><span>Kapster</span><b>${esc(t.kapster)}</b></div><div><span>Kasir</span><b>${esc(t.kasir)}</b></div>
+      <div><span>Pelanggan</span><b>${esc(t.pelanggan || '-')}</b></div><div><span>Pembayaran</span><b>${t.bayar}</b></div>
+      <div><span>Harga</span><b>${rp(t.harga)}</b></div>${t.diskon ? `<div><span>Promo (${esc(t.ketPromo)})</span><b>−${rp(t.diskon)}</b></div>` : ''}
+      <div class="strong"><span>Total</span><span>${rp(t.total)}</span></div>
+    </div>
+    ${(t.log || []).length ? `<div class="hint">${t.log.map(l => `• ${jam(l.at)} ${esc(l.oleh)}: ${esc(l.aksi)} ${esc(l.detail || '')}`).join('<br>')}</div>` : ''}
+    ${!t.batal ? `
+      ${t.wa ? `<a class="btn wa" href="${waLink(t.wa, strukText(t))}" target="_blank" rel="noopener">Kirim ulang struk WA</a>` : ''}
+      ${kasLocked(t.tgl) ? '<div class="hint">Kas tanggal ini sudah ditutup, jadi transaksi tidak bisa diubah atau dibatalkan. Buka kembali kas di menu Tutup Kas kalau perlu koreksi.</div>' : '<div class="grid2"><button class="btn ghost" id="edit">Ubah</button><button class="btn danger" id="batal">Batalkan</button></div>'}` : ''}`);
+  sh.querySelector('#cx').onclick = closeSheet;
+  if (t.batal || kasLocked(t.tgl)) return;
+  sh.querySelector('#batal').onclick = async () => {
+    const a = await ask({ title: 'Batalkan ' + t.nota + '?', body: 'Transaksi tidak dihapus, tapi ditandai batal dan tidak dihitung. Owner bisa melihat alasannya.', input: { label: 'Alasan pembatalan', ph: 'mis. salah pilih layanan', required: 'Alasan wajib diisi', multi: false }, ok: 'Batalkan transaksi', danger: true, cancel: 'Kembali' });
+    if (!a) return;
+    t.batal = true; t.batalAlasan = a; t.batalAt = nowISO(); t.batalOleh = S.kasir || 'Owner'; addLog(t, 'Batal', a);
+    DB.put('transaksi', t, t.tgl);
+    if (t.pelangganId) { const p = DB.get(t.pelangganId); if (p) { p.visits = Math.max(0, (p.visits || 1) - 1); if (p.kapCount?.[t.kapster]) p.kapCount[t.kapster]--; DB.put('pelanggan', p); } }
+    toast(t.nota + ' dibatalkan'); render();
+  };
+  sh.querySelector('#edit').onclick = () => editTx(t);
+}
+function editTx(t) {
+  const E = { kapster: t.kapster, bayar: t.bayar };
+  const sh = openSheet('<div id="eb"></div>');
+  const draw = () => {
+    sh.querySelector('#eb').innerHTML = `<div class="sec"><div class="hd"><h1>Ubah ${t.nota}</h1><button class="x" id="cx">×</button></div>
+      <label class="f">Kapster</label>${kasirChips(E.kapster, 'ekap')}
+      <label class="f">Pembayaran</label><div class="seg"><button data-b="Tunai" class="${E.bayar === 'Tunai' ? 'sel' : ''}">Tunai</button><button data-b="QRIS" class="${E.bayar === 'QRIS' ? 'sel' : ''}">QRIS</button></div>
+      <div class="hint">Untuk salah layanan atau harga, batalkan transaksi ini lalu input ulang.</div>
+      <button class="btn" id="ok">Simpan perubahan</button></div>`;
+    sh.querySelector('#cx').onclick = closeSheet;
+    bindChips(sh, 'ekap', n => { if (n) E.kapster = n; draw(); });
+    sh.querySelectorAll('[data-b]').forEach(b => b.onclick = () => { E.bayar = b.dataset.b; draw(); });
+    sh.querySelector('#ok').onclick = () => {
+      const ch = [];
+      if (E.kapster !== t.kapster) ch.push('kapster ' + t.kapster + '→' + E.kapster);
+      if (E.bayar !== t.bayar) ch.push('bayar ' + t.bayar + '→' + E.bayar);
+      if (!ch.length) return closeSheet();
+      t.kapster = E.kapster; t.bayar = E.bayar; addLog(t, 'Ubah', ch.join(', '));
+      DB.put('transaksi', t, t.tgl); closeSheet(); render(); toast('Perubahan disimpan');
+    };
+  };
+  draw();
+}
+
+/* ============================================================
+   TAB: PENGELUARAN
+   ============================================================ */
+function vPengeluaran() {
+  const m = $('#main'), tgl = S.date, list = pgOn(tgl), aktif = list.filter(p => !p.batal), now = isToday(), kas = kasOf(tgl);
+  const canInput = now && kas && !kas.tutup;
+  m.innerHTML = `
+    ${dateBar()}
+    ${canInput ? '' : now && !kas ? `<div class="card lock"><b>Kas belum dibuka</b><div class="small muted">Pengeluaran dibayar dari uang laci, jadi buka kas dulu di menu Kasir.</div></div>` : lockNote(tgl, 'Pengeluaran')}
+    ${canInput ? `<div class="card sec"><h1>Catat Pengeluaran</h1>
+      <label class="f">Kategori</label><div class="chips" id="kat">${KAT_PG.map((k, i) => `<button class="chip ${i === 0 ? 'sel' : ''}" data-k="${k}">${k}</button>`).join('')}</div>
+      <label class="f">Keterangan<input id="pk" class="in" placeholder="mis. Beli pomade stok"></label>
+      <label class="f">Nominal<input id="pn" class="in big" inputmode="numeric" placeholder="0"></label>
+      <div class="hint">Pengeluaran dianggap dibayar dari uang tunai di laci.</div>
+      <button class="btn gold" id="pSave">Simpan Pengeluaran</button>
+    </div>` : ''}
+    <section class="sec"><div class="row between"><h2>${now ? 'Hari ini' : fmtTglS(tgl)}</h2><b class="num">${rp(aktif.reduce((a, p) => a + p.nominal, 0))}</b></div>
+      <div class="list">${list.length ? list.slice().reverse().map(p => `<button class="item ${p.batal ? 'void' : ''}" data-pg="${p.id}"><div class="main"><div class="t">${esc(p.ket || p.kategori)}</div><div class="s">${esc(p.kategori)} · ${jam(p.at)} · ${esc(p.kasir)}</div></div>${p.batal ? '<span class="tag void">BATAL</span>' : ''}<div class="v">${rp(p.nominal)}</div></button>`).join('') : '<div class="empty">Tidak ada pengeluaran.</div>'}</div>
+    </section>`;
+  bindDateBar();
+  m.querySelectorAll('[data-pg]').forEach(b => b.onclick = () => editPg(DB.get(b.dataset.pg)));
+  if (!canInput) return;
+  let kat = KAT_PG[0];
+  m.querySelectorAll('#kat .chip').forEach(c => c.onclick = () => { kat = c.dataset.k; m.querySelectorAll('#kat .chip').forEach(x => x.classList.toggle('sel', x === c)); });
+  moneyInput($('#pn'));
+  $('#pSave').onclick = () => {
+    const n = parseNum($('#pn').value), k = $('#pk').value.trim();
+    if (!n) return toast('Isi nominalnya');
+    if (!k) return toast('Isi keterangannya');
+    DB.put('pengeluaran', { id: uid('pg'), tgl, at: nowISO(), kategori: kat, ket: k, nominal: n, kasir: S.kasir || 'Owner', batal: false, log: [] }, tgl);
+    toast('Pengeluaran tersimpan'); render();
+  };
+}
+function editPg(p) {
+  let kat = p.kategori;
+  const sh = openSheet(`<div class="hd"><h1>Ubah pengeluaran</h1><button class="x" id="cx">×</button></div>
+    ${p.batal ? `<div class="card"><b style="color:var(--bad)">Dibatalkan</b><div class="small muted">${esc(p.batalAlasan || '')}</div></div>` : kasLocked(p.tgl) ? `<div class="card kv"><div><span>${esc(p.ket)} (${esc(p.kategori)})</span><b>${rp(p.nominal)}</b></div></div><div class="hint">Kas sudah ditutup, jadi pengeluaran ini tidak bisa diubah. Buka kembali kas di menu Tutup Kas kalau perlu koreksi.</div>` : `
+    <div class="chips" id="ekat">${KAT_PG.map(k => `<button class="chip ${k === kat ? 'sel' : ''}" data-k="${k}">${k}</button>`).join('')}</div>
+    <label class="f">Keterangan<input id="ek" class="in" value="${esc(p.ket)}"></label>
+    <label class="f">Nominal<input id="en" class="in big" inputmode="numeric" value="${p.nominal.toLocaleString('id-ID')}"></label>
+    <button class="btn" id="ok">Simpan perubahan</button><button class="btn danger" id="del">Batalkan pengeluaran</button>`}
+    ${(p.log || []).length ? `<div class="hint">${p.log.map(l => `• ${jam(l.at)} ${esc(l.oleh)}: ${esc(l.aksi)} ${esc(l.detail || '')}`).join('<br>')}</div>` : ''}`);
+  sh.querySelector('#cx').onclick = closeSheet;
+  if (p.batal || kasLocked(p.tgl)) return;
+  moneyInput(sh.querySelector('#en'));
+  sh.querySelectorAll('#ekat .chip').forEach(c => c.onclick = () => { kat = c.dataset.k; sh.querySelectorAll('#ekat .chip').forEach(x => x.classList.toggle('sel', x === c)); });
+  sh.querySelector('#ok').onclick = () => {
+    const n = parseNum(sh.querySelector('#en').value), k = sh.querySelector('#ek').value.trim(), ch = [];
+    if (!n || !k) return toast('Keterangan dan nominal wajib diisi');
+    if (kat !== p.kategori) ch.push('kategori ' + p.kategori + '→' + kat);
+    if (k !== p.ket) ch.push('ket "' + p.ket + '"→"' + k + '"');
+    if (n !== p.nominal) ch.push('nominal ' + rp(p.nominal) + '→' + rp(n));
+    if (!ch.length) return closeSheet();
+    Object.assign(p, { kategori: kat, ket: k, nominal: n }); addLog(p, 'Ubah', ch.join(', '));
+    DB.put('pengeluaran', p, p.tgl); closeSheet(); render(); toast('Perubahan disimpan');
+  };
+  sh.querySelector('#del').onclick = async () => {
+    const a = await ask({ title: 'Batalkan pengeluaran?', input: { label: 'Alasan', required: 'Alasan wajib diisi' }, ok: 'Batalkan', danger: true, cancel: 'Kembali' });
+    if (!a) return; p.batal = true; p.batalAlasan = a; addLog(p, 'Batal', a); DB.put('pengeluaran', p, p.tgl); render(); toast('Pengeluaran dibatalkan');
+  };
+}
+
+/* ============================================================
+   TAB: PELANGGAN
+   ============================================================ */
+function pelInfo(p) {
+  const days = p.lastVisit ? daysBetween(p.lastVisit, today()) : null;
+  const fav = Object.entries(p.kapCount || {}).filter(e => e[1] > 0).sort((a, b) => b[1] - a[1])[0]?.[0];
+  return { days, fav };
+}
+function vPelanggan() {
+  const m = $('#main'), lim = +ST().reminderDays || 28;
+  const all = DB.list('pelanggan');
+  const lama = all.filter(p => p.wa && p.lastVisit && daysBetween(p.lastVisit, today()) >= lim);
+  let rows = S.pelFilter === 'lama' ? lama : all;
+  const q = S.pelQ.trim().toLowerCase();
+  if (q) rows = rows.filter(p => p.nama.toLowerCase().includes(q) || showWA(p.wa).includes(q));
+  rows = rows.slice().sort((a, b) => S.pelFilter === 'lama' ? (a.lastVisit || '').localeCompare(b.lastVisit || '') : (b.lastVisit || '').localeCompare(a.lastVisit || ''));
+  m.innerHTML = `
+    <div class="row between"><h1>Pelanggan</h1><button class="btn sm" id="addP">+ Tambah</button></div>
+    <div class="seg"><button data-f="semua" class="${S.pelFilter === 'semua' ? 'sel' : ''}">Semua (${all.length})</button><button data-f="lama" class="${S.pelFilter === 'lama' ? 'sel' : ''}">Lama tak datang ${lama.length ? `<span class="badge">${lama.length}</span>` : ''}</button></div>
+    <input id="pq" class="in" placeholder="Cari nama atau nomor" value="${esc(S.pelQ)}">
+    ${S.pelFilter === 'lama' ? `<div class="hint">Pelanggan yang terakhir datang ${lim} hari lalu atau lebih. Tekan tombol WA untuk kirim pengingat satu per satu.</div>` : ''}
+    <div class="list">${rows.length ? rows.slice(0, 200).map(p => { const i = pelInfo(p); return `
+      <div class="item"><button class="main" data-p="${p.id}" style="border:0;background:none;text-align:left;padding:0">
+        <div class="t">${esc(p.nama)}</div>
+        <div class="s">${showWA(p.wa) || 'tanpa WA'} · ${p.visits || 0}× datang${i.fav ? ' · langganan ' + esc(i.fav) : ''}</div>
+        <div class="s">${p.lastVisit ? 'Terakhir ' + fmtTglS(p.lastVisit) + ' (' + (i.days === 0 ? 'hari ini' : i.days + ' hari lalu') + ')' : 'Belum pernah transaksi'}</div></button>
+        ${p.wa ? `<a class="btn sm wa" href="${waLink(p.wa, reminderText(p))}" target="_blank" rel="noopener" data-rem="${p.id}">Ingatkan</a>` : ''}</div>`; }).join('') : `<div class="empty">${S.pelFilter === 'lama' ? 'Semua pelanggan masih rutin datang.' : 'Belum ada data pelanggan. Pelanggan otomatis tercatat saat nama diisi di transaksi.'}</div>`}</div>`;
+  m.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { S.pelFilter = b.dataset.f; render(); });
+  const pq = $('#pq'); pq.oninput = () => { S.pelQ = pq.value; const pos = pq.selectionStart; render(); const n = $('#pq'); n.focus(); n.setSelectionRange(pos, pos); };
+  m.querySelectorAll('[data-p]').forEach(b => b.onclick = () => editPel(DB.get(b.dataset.p)));
+  m.querySelectorAll('[data-rem]').forEach(a => a.addEventListener('click', () => { const p = DB.get(a.dataset.rem); p.lastReminder = today(); DB.put('pelanggan', p); }));
+  $('#addP').onclick = () => editPel(null);
+}
+// "hari ini", "kemarin", "5 hari lalu", "3 minggu lalu", "2 bulan lalu"
+function lamaText(d) {
+  if (d <= 0) return 'hari ini';
+  if (d === 1) return 'kemarin';
+  if (d < 14) return d + ' hari lalu';
+  if (d < 60) { const w = Math.floor(d / 7); return (d % 7 ? 'lebih dari ' : '') + w + ' minggu lalu'; }
+  const b = Math.floor(d / 30); return (d % 30 > 6 ? 'lebih dari ' : '') + b + ' bulan lalu';
+}
+function reminderText(p) {
+  const d = p.lastVisit ? daysBetween(p.lastVisit, today()) : 0;
+  return fill(ST().tplReminder, { ...tplVars(), nama: p.nama.split(' ')[0], lama: lamaText(d), hari: d, minggu: Math.floor(d / 7), tanggal: p.lastVisit ? fmtTglS(p.lastVisit) : '-' });
+}
+function editPel(p) {
+  const sh = openSheet(`<div class="hd"><h1>${p ? 'Data pelanggan' : 'Pelanggan baru'}</h1><button class="x" id="cx">×</button></div>
+    <label class="f">Nama<input id="pn" class="in" value="${esc(p?.nama || '')}"></label>
+    <label class="f">No WA<input id="pw" class="in" inputmode="tel" placeholder="08…" value="${esc(showWA(p?.wa))}"></label>
+    ${p ? `<div class="hint">${p.visits || 0}× datang · terakhir ${p.lastVisit ? fmtTglS(p.lastVisit) : '-'}${p.lastReminder ? ' · pengingat terakhir ' + fmtTglS(p.lastReminder) : ''}</div>` : ''}
+    <button class="btn" id="ok">Simpan</button>`);
+  sh.querySelector('#cx').onclick = closeSheet;
+  sh.querySelector('#ok').onclick = () => {
+    const nama = sh.querySelector('#pn').value.trim(), wa = normWA(sh.querySelector('#pw').value);
+    if (!nama) return toast('Nama wajib diisi');
+    if (sh.querySelector('#pw').value && wa.length < 10) return toast('Nomor WA belum lengkap');
+    const dup = wa && DB.list('pelanggan').find(x => x.wa === wa && x.id !== p?.id);
+    if (dup) return toast('Nomor ini sudah dipakai ' + dup.nama);
+    if (p) { p.nama = nama; p.wa = wa; DB.put('pelanggan', p); }
+    else DB.put('pelanggan', { id: uid('pel'), nama, wa, visits: 0, lastVisit: null, kapCount: {}, createdAt: nowISO() });
+    closeSheet(); render(); toast('Tersimpan');
+  };
+}
+
+/* ============================================================
+   REKAP HARIAN
+   ============================================================ */
+function dayStats(tgl) {
+  const tx = txOn(tgl), ok = tx.filter(t => !t.batal), batal = tx.filter(t => t.batal);
+  const pg = pgOn(tgl).filter(p => !p.batal), kas = kasOf(tgl);
+  const sum = (a, f = () => true) => a.filter(f).reduce((s, t) => s + (t.total ?? t.nominal), 0);
+  const perLay = {}, perKap = {};
+  for (const t of ok) {
+    (perLay[t.layanan] ||= { n: 0, v: 0 }); perLay[t.layanan].n++; perLay[t.layanan].v += t.total;
+    (perKap[t.kapster] ||= { n: 0, v: 0 }); perKap[t.kapster].n++; perKap[t.kapster].v += t.total;
+  }
+  const tunai = sum(ok, t => t.bayar === 'Tunai'), qris = sum(ok, t => t.bayar === 'QRIS'), totalPg = sum(pg);
+  const modal = kas?.modal || 0, seharusnya = modal + tunai - totalPg;
+  return { tgl, tx, ok, batal, pg, kas, total: tunai + qris, tunai, qris, totalPg, modal, seharusnya, diskon: ok.reduce((a, t) => a + (t.diskon || 0), 0), perLay, perKap };
+}
+
+/* ============================================================
+   TAB: TUTUP KAS
+   ============================================================ */
+function vTutup() {
+  const m = $('#main'), tgl = S.date, D = dayStats(tgl), now = isToday();
+  if (!D.kas) { m.innerHTML = `${dateBar()}<div class="card sec"><h1>Kas ${now ? 'belum dibuka' : 'tidak dibuka'}</h1><div class="hint">${now ? 'Buka kas dulu di menu Kasir sebelum mulai transaksi.' : 'Tidak ada kas yang dibuka pada ' + fmtTgl(tgl) + '.'}</div>${now ? '<button class="btn" id="go">Ke menu Kasir</button>' : ''}</div>`; bindDateBar(); $('#go') && ($('#go').onclick = () => { S.tab = 'kasir'; render(); }); return; }
+  if (D.kas.tutup) {
+    const T = D.kas.tutup;
+    m.innerHTML = `${dateBar()}<div class="card lock"><b>Kas sudah ditutup</b><div class="small muted">${fmtTgl(tgl)} · oleh ${esc(T.kasir)} jam ${jam(T.at)}${T.catatan ? '<br>Catatan: ' + esc(T.catatan) : ''}</div></div>
+      ${finCard(D)}${cashCard(D, T)}
+      <button class="btn gold" id="lap">Lihat & bagikan laporan</button>
+      <button class="btn ghost" id="reopen">Buka kembali kas</button>`;
+    bindDateBar();
+    $('#lap').onclick = () => showReport(tgl);
+    $('#reopen').onclick = async () => {
+      const a = await ask({ title: 'Buka kembali kas?', body: 'Pakai ini kalau masih ada pelanggan setelah tutup kas. Kas harus ditutup ulang nanti, dan owner bisa melihat catatannya.', input: { label: 'Alasan', required: 'Alasan wajib diisi' }, ok: 'Buka kembali', cancel: 'Kembali' });
+      if (!a) return; const k = D.kas; addLog(k, 'Buka ulang kas', a); k.tutupLama = [...(k.tutupLama || []), k.tutup]; k.tutup = null; DB.put('kas', k, tgl); render();
+    };
+    return;
+  }
+  m.innerHTML = `
+    ${dateBar()}
+    <div class="sec"><h1>Tutup Kas${now ? '' : ' (terlewat)'}</h1><div class="hint">${fmtTgl(tgl)} · ${D.ok.length} pelanggan · kasir ${esc(now ? (S.kasir || D.kas.kasir) : D.kas.kasir)}</div></div>
+    ${finCard(D)}${cashCard(D, null)}
+    <div class="card sec"><h2>Hitung uang di laci</h2>
+      <label class="f">Uang fisik di laci (hitung manual)<input id="fisik" class="in big" inputmode="numeric" placeholder="0"></label>
+      <div id="selisih" class="hint"></div>
+      <label class="f">Disetor ke owner<input id="setor" class="in big" inputmode="numeric" placeholder="0"></label>
+      <div id="sisa" class="hint"></div>
+      <label class="f">Catatan<textarea id="cat" class="in" placeholder="Opsional, mis. alasan selisih"></textarea></label>
+      <label class="f">Tanda tangan kasir</label>
+      <canvas id="sig" class="sig"></canvas>
+      <div class="row between"><span class="small muted">Gores tanda tangan di kotak</span><button class="btn sm ghost" id="sigClr">Hapus</button></div>
+      <button class="btn gold" id="tutupBtn">Tutup Kas & Buat Laporan</button>
+    </div>`;
+  const F = $('#fisik'), Se = $('#setor'); moneyInput(F); moneyInput(Se);
+  const upd = () => {
+    const f = parseNum(F.value), s = parseNum(Se.value), sel = f - D.seharusnya;
+    $('#selisih').innerHTML = F.value ? (sel === 0 ? '<b style="color:var(--ok)">Pas, tidak ada selisih.</b>' : `<b style="color:var(--bad)">Selisih ${sel > 0 ? 'lebih' : 'kurang'} ${rp(Math.abs(sel))}</b>. Jelaskan di catatan.`) : '';
+    $('#sisa').innerHTML = F.value ? `Sisa di laci untuk modal besok: <b>${rp(f - s)}</b>` : '';
+  };
+  F.addEventListener('input', upd); Se.addEventListener('input', upd); bindDateBar();
+  const pad_ = sigPad($('#sig')); $('#sigClr').onclick = pad_.clear;
+  $('#tutupBtn').onclick = async () => {
+    if (!F.value) return toast('Isi uang fisik di laci');
+    const f = parseNum(F.value), s = parseNum(Se.value);
+    if (s > f) return toast('Setoran melebihi uang fisik');
+    if (pad_.empty()) return toast('Tanda tangan dulu');
+    const sel = f - D.seharusnya;
+    if (sel !== 0 && !$('#cat').value.trim()) return toast('Ada selisih, isi catatannya');
+    const ok = await ask({ title: 'Tutup kas sekarang?', body: `Kas seharusnya ${rp(D.seharusnya)}, fisik ${rp(f)}, setor ${rp(s)}.`, ok: 'Tutup Kas' });
+    if (!ok) return;
+    const k = D.kas;
+    k.tutup = { at: nowISO(), kasir: (now && S.kasir) || k.kasir, tunai: D.tunai, qris: D.qris, pengeluaran: D.totalPg, seharusnya: D.seharusnya, fisik: f, selisih: sel, setor: s, sisa: f - s, catatan: $('#cat').value.trim(), ttd: pad_.data() };
+    DB.put('kas', k, tgl); toast('Kas ditutup'); render(); showReport(tgl);
+  };
+}
+function finCard(D) {
+  const bersih = D.total - D.totalPg;
+  return `<div class="card sec"><h2>Keuangan ${isToday() ? 'hari ini' : fmtTglS(D.tgl)}</h2>
+    <div class="kv">
+      <div><span>Pendapatan kotor <small class="muted">(semua pemasukan)</small></span><b>${rp(D.total)}</b></div>
+      <div class="muted"><span>&nbsp;&nbsp;Tunai</span><span>${rp(D.tunai)}</span></div>
+      <div class="muted"><span>&nbsp;&nbsp;QRIS</span><span>${rp(D.qris)}</span></div>
+      <div><span>Pengeluaran</span><b>− ${rp(D.totalPg)}</b></div>
+      <div class="strong"><span>Pendapatan bersih</span><span style="color:${bersih < 0 ? 'var(--bad)' : 'var(--ok)'}">${rp(bersih)}</span></div>
+    </div>
+    <div class="hint">Bersih di sini belum dipotong gaji pokok dan biaya bulanan seperti sewa.</div></div>`;
+}
+function cashCard(D, T) {
+  return `<div class="card sec"><h2>Uang tunai di laci</h2>
+    <div class="kv">
+      <div><span>Modal awal (buka kas)</span><b>${rp(D.modal)}</b></div>
+      <div><span>+ Pemasukan tunai</span><b>${rp(D.tunai)}</b></div>
+      <div><span>− Pengeluaran</span><b>${rp(D.totalPg)}</b></div>
+      <div class="strong"><span>Seharusnya ada di laci</span><span>${rp(D.seharusnya)}</span></div>
+      ${T ? `<div><span>Uang fisik dihitung kasir</span><b>${rp(T.fisik)}</b></div>
+      <div class="strong"><span>Selisih</span><span style="color:${T.selisih ? 'var(--bad)' : 'var(--ok)'}">${T.selisih > 0 ? '+' : ''}${rp(T.selisih)}</span></div>
+      <div><span>Disetor ke owner</span><b>${rp(T.setor)}</b></div><div><span>Sisa di laci (modal besok)</span><b>${rp(T.sisa)}</b></div>` : ''}
+    </div>
+    <div class="hint">Uang QRIS (${rp(D.qris)}) masuk ke rekening, tidak ada di laci.</div></div>`;
+}
+function sigPad(c) {
+  const r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  c.width = r.width * dpr; c.height = r.height * dpr;
+  const x = c.getContext('2d'); x.scale(dpr, dpr); x.lineWidth = 2.4; x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = '#1b1916';
+  let draw = false, has = false, lx = 0, ly = 0;
+  const pos = e => { const b = c.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+  c.onpointerdown = e => { draw = true; [lx, ly] = pos(e); c.setPointerCapture(e.pointerId); };
+  c.onpointermove = e => { if (!draw) return; const [nx, ny] = pos(e); x.beginPath(); x.moveTo(lx, ly); x.lineTo(nx, ny); x.stroke(); lx = nx; ly = ny; has = true; };
+  c.onpointerup = c.onpointercancel = () => draw = false;
+  return {
+    clear: () => { x.clearRect(0, 0, c.width, c.height); has = false; }, empty: () => !has,
+    data: () => { const o = document.createElement('canvas'); o.width = 480; o.height = 150; const ox = o.getContext('2d'); ox.drawImage(c, 0, 0, 480, 150); return o.toDataURL('image/png'); }
+  };
+}
+
+/* ============================================================
+   LAPORAN HARIAN (gambar JPEG)
+   ============================================================ */
+const C = { ink: '#1b1916', gold: '#a8895a', gold2: '#c9ad7c', cream: '#f3eee1', paper: '#fbf8f0', line: '#e2d9c6', muted: '#7c7365', bad: '#b4483b', ok: '#3f7a52', qris: '#3b5f8a' };
+let logoImg = null;
+function loadLogo() { return new Promise(r => { if (logoImg) return r(logoImg); const i = new Image(); i.onload = () => { logoImg = i; r(i); }; i.onerror = () => r(null); i.src = LOGO; }); }
+function loadImg(src) { return new Promise(r => { if (!src) return r(null); const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = src; }); }
+
+async function renderDailyCanvas(tgl) {
+  await document.fonts.ready; const logo = await loadLogo();
+  const D = dayStats(tgl), K = D.kas, T = K?.tutup, s = ST();
+  const W = 1080, P = 64, cv = document.createElement('canvas'); cv.width = W; cv.height = 9000;
+  const x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, W, cv.height);
+  const F = (w, sz, fam = 'Manrope') => x.font = `${w} ${sz}px "${fam}", sans-serif`;
+  const txt = (t, X, Y, { a = 'left', c = C.ink } = {}) => { x.fillStyle = c; x.textAlign = a; x.fillText(t, X, Y); };
+  let y = 0;
+  // header
+  x.fillStyle = C.ink; x.fillRect(0, 0, W, 250);
+  if (logo) x.drawImage(logo, P, 34, 180, 180 * logo.height / logo.width);
+  F(600, 30, 'Josefin Sans'); txt('LAPORAN HARIAN KASIR', 270, 92, { c: C.gold2 });
+  F(800, 48); txt(s.toko, 270, 150, { c: C.cream });
+  F(500, 26); txt(fmtTgl(tgl), 270, 196, { c: '#d9cfbd' });
+  y = 300;
+  const sec = t => { F(600, 24, 'Josefin Sans'); txt(t.toUpperCase(), P, y, { c: C.gold }); y += 16; x.fillStyle = C.line; x.fillRect(P, y, W - 2 * P, 2); y += 46; };
+  const kv = (k, v, { bold = false, c = C.ink, sz = 30 } = {}) => { F(bold ? 800 : 500, sz); txt(k, P, y, { c: bold ? C.ink : '#4a443b' }); F(bold ? 800 : 700, sz); txt(v, W - P, y, { a: 'right', c }); y += sz + 22; };
+  // kpi
+  const box = (X, w, lab, val, dark) => { x.fillStyle = dark ? C.ink : C.paper; x.fillRect(X, y, w, 150); if (!dark) { x.strokeStyle = C.line; x.lineWidth = 2; x.strokeRect(X, y, w, 150); } F(600, 22, 'Josefin Sans'); txt(lab.toUpperCase(), X + 26, y + 48, { c: dark ? C.gold2 : C.muted }); F(800, 44); txt(val, X + 26, y + 112, { c: dark ? C.cream : C.ink }); };
+  const bw = (W - 2 * P - 24) / 2;
+  box(P, bw, 'Total pemasukan', rp(D.total), true); box(P + bw + 24, bw, 'Jumlah kepala', String(D.ok.length)); y += 174;
+  box(P, bw, 'Tunai', rp(D.tunai)); box(P + bw + 24, bw, 'QRIS', rp(D.qris)); y += 214;
+  sec('Info kas');
+  kv('Kasir buka', K?.kasir || '-'); kv('Jam buka', K ? jam(K.bukaAt) : '-'); kv('Kasir tutup', T?.kasir || 'Belum ditutup'); if (T) kv('Jam tutup', jam(T.at));
+  y += 20; sec('Per layanan');
+  const lays = Object.entries(D.perLay).sort((a, b) => b[1].v - a[1].v);
+  if (!lays.length) kv('Belum ada transaksi', ''); lays.forEach(([k, v]) => kv(`${k}  ×${v.n}`, rp(v.v)));
+  if (D.diskon) kv('Total potongan promo', '−' + rp(D.diskon), { c: C.bad });
+  y += 20; sec('Per kapster');
+  const kaps = Object.entries(D.perKap).sort((a, b) => b[1].v - a[1].v);
+  if (!kaps.length) kv('-', ''); kaps.forEach(([k, v]) => kv(`${k}  ·  ${v.n} kepala`, rp(v.v)));
+  y += 20; sec('Pengeluaran');
+  if (!D.pg.length) kv('Tidak ada pengeluaran', rp(0)); D.pg.forEach(p => kv(`${p.ket} (${p.kategori})`.slice(0, 44), rp(p.nominal)));
+  kv('Total pengeluaran', rp(D.totalPg), { bold: true });
+  y += 20; sec('Ringkasan keuangan');
+  kv('Pendapatan kotor (tunai + QRIS)', rp(D.total)); kv('− Pengeluaran', rp(D.totalPg));
+  kv('Pendapatan bersih', rp(D.total - D.totalPg), { bold: true, c: D.total - D.totalPg < 0 ? C.bad : C.ok });
+  F(500, 22); txt('Belum dipotong gaji pokok & biaya bulanan.', P, y - 6, { c: C.muted }); y += 34;
+  y += 20; sec('Uang tunai di laci');
+  kv('Modal awal', rp(D.modal)); kv('+ Pemasukan tunai', rp(D.tunai)); kv('− Pengeluaran', rp(D.totalPg));
+  kv('Seharusnya ada di laci', rp(D.seharusnya), { bold: true });
+  if (T) {
+    kv('Uang fisik dihitung', rp(T.fisik));
+    kv('Selisih', (T.selisih > 0 ? '+' : '') + rp(T.selisih), { bold: true, c: T.selisih ? C.bad : C.ok });
+    kv('Disetor ke owner', rp(T.setor)); kv('Sisa di laci (modal besok)', rp(T.sisa));
+    F(500, 22); txt('QRIS ' + rp(D.qris) + ' masuk rekening, tidak di laci.', P, y - 6, { c: C.muted }); y += 34;
+    if (T.catatan) { F(500, 26); x.fillStyle = '#4a443b'; x.textAlign = 'left'; wrap(x, 'Catatan: ' + T.catatan, P, y, W - 2 * P, 36).forEach(l => { x.fillText(l, P, y); y += 36; }); y += 12; }
+  }
+  y += 20; sec(`Daftar transaksi (${D.tx.length})`);
+  F(600, 20, 'Josefin Sans'); const cols = [P, P + 110, P + 210, P + 470, P + 680, W - P];
+  ['NOTA', 'JAM', 'LAYANAN', 'KAPSTER', 'BAYAR', 'TOTAL'].forEach((h, i) => txt(h, cols[i], y, { a: i === 5 ? 'right' : 'left', c: C.muted })); y += 38;
+  D.tx.forEach(t => {
+    const c = t.batal ? '#a39886' : C.ink; F(500, 24);
+    txt(t.nota.replace(/^\D+/, ''), cols[0], y, { c }); txt(jam(t.at), cols[1], y, { c }); txt(t.layanan.slice(0, 16), cols[2], y, { c }); txt(t.kapster.slice(0, 13), cols[3], y, { c });
+    txt(t.batal ? 'BATAL' : t.bayar, cols[4], y, { c: t.batal ? C.bad : t.bayar === 'QRIS' ? C.qris : c }); F(700, 24); txt(rp(t.total), cols[5], y, { a: 'right', c });
+    if (t.batal) { x.fillStyle = '#a39886'; x.fillRect(cols[0], y - 9, W - 2 * P, 2); }
+    y += 30;
+    const sub = [t.diskon ? `promo ${t.ketPromo} −${rp(t.diskon)}` : '', t.batal ? `alasan batal: ${t.batalAlasan}` : '', t.pelanggan ? t.pelanggan : ''].filter(Boolean).join(' · ');
+    if (sub) { F(500, 19); txt(sub.slice(0, 80), cols[2], y, { c: C.muted }); y += 28; }
+    y += 8;
+  });
+  // signature
+  y += 30; x.fillStyle = C.line; x.fillRect(P, y, W - 2 * P, 2); y += 50;
+  F(500, 24); txt('Dilaporkan oleh,', W - P - 360, y, { c: C.muted }); y += 10;
+  const sig = await loadImg(T?.ttd);
+  if (sig) x.drawImage(sig, W - P - 380, y, 360, 112); y += 140;
+  F(800, 28); txt(T?.kasir || K?.kasir || '-', W - P - 360, y); y += 34;
+  F(500, 22); txt(T ? 'Kasir · ' + fmtTglS(tgl) + ' ' + jam(T.at) : 'Belum tutup kas', W - P - 360, y, { c: C.muted }); y += 60;
+  F(500, 20); txt('Dibuat otomatis oleh Kasir Digital ' + s.toko, W / 2, y, { a: 'center', c: '#a39886' }); y += 50;
+  const out = document.createElement('canvas'); out.width = W; out.height = y; out.getContext('2d').drawImage(cv, 0, 0); return out;
+}
+function wrap(x, t, X, Y, maxW) { const w = t.split(' '), L = []; let cur = ''; for (const p of w) { const tt = cur ? cur + ' ' + p : p; if (x.measureText(tt).width > maxW && cur) { L.push(cur); cur = p; } else cur = tt; } if (cur) L.push(cur); return L; }
+
+async function shareBlob(blob, name, title) {
+  if (window.claude?.use) {   // pratinjau di aplikasi Claude
+    try { const dl = await window.claude.use('downloads'); if (dl) { await dl.save({ filename: name, data: blob }); toast('Tersimpan: ' + name); return; } }
+    catch (e) { if (e?.code === 'declined') return; }
+  }
+  const file = new File([blob], name, { type: blob.type });
+  try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title }); return; } } catch (e) { if (e.name === 'AbortError') return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast('File diunduh: ' + name);
+}
+async function showReport(tgl) {
+  const sh = openSheet(`<div class="hd"><h1>Laporan ${fmtTglS(tgl)}</h1><button class="x" id="cx">×</button></div><div class="hint">Menyiapkan laporan…</div>`);
+  sh.querySelector('#cx').onclick = closeSheet;
+  const cv = await renderDailyCanvas(tgl), url = cv.toDataURL('image/jpeg', .9);
+  sh.innerHTML = `<div class="grab"></div><div class="hd"><h1>Laporan ${fmtTglS(tgl)}</h1><button class="x" id="cx">×</button></div>
+    <button class="btn gold" id="sh">Bagikan PDF ke WhatsApp</button><img class="report-img" src="${url}" alt="Laporan harian">`;
+  sh.querySelector('#cx').onclick = closeSheet;
+  sh.querySelector('#sh').onclick = async () => {
+    const name = `Laporan-Harian-${(ST().toko).replace(/\W+/g, '')}-${tgl}`;
+    try {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+      const { jsPDF } = window.jspdf, W = cv.width, H = cv.height;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'px', format: [W, H], hotfixes: ['px_scaling'], compress: true });
+      doc.addImage(url, 'JPEG', 0, 0, W, H);
+      shareBlob(doc.output('blob'), name + '.pdf', 'Laporan ' + tgl);
+    } catch (e) {   // tanpa internet: kirim sebagai gambar
+      cv.toBlob(b => shareBlob(b, name + '.jpg', 'Laporan ' + tgl), 'image/jpeg', .9);
+    }
+  };
+}
+
+/* ============================================================
+   TAB: OWNER
+   ============================================================ */
+function vLaporan() {
+  const m = $('#main'), tabs = [['harian', 'Harian'], ['bulanan', 'Bulanan']];
+  m.innerHTML = `<div class="row between"><h1>Laporan</h1><button class="btn sm ghost" id="refresh">↻ Muat ulang</button></div>
+    <div class="seg">${tabs.map(([k, l]) => `<button data-o="${k}" class="${S.lapTab === k ? 'sel' : ''}">${l}</button>`).join('')}</div><div id="osub" class="sec"></div>`;
+  m.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { S.lapTab = b.dataset.o; render(); });
+  $('#refresh').onclick = async () => { toast('Memuat data terbaru…'); await DB.pull(); render(); };
+  ({ harian: oHarian, bulanan: oBulanan })[S.lapTab]($('#osub'));
+}
+function vOwner() {
+  const m = $('#main');
+  if (!S.owner) {
+    m.innerHTML = `<div class="card sec"><h1>Area Owner</h1><div class="hint">Riwayat perubahan (pembatalan, edit, selisih kas) dan pengaturan layanan, kapster, template WA, serta koneksi online.</div>
+      <label class="f">Password owner<input id="pw" class="in" type="password" inputmode="numeric" autocomplete="current-password"></label><button class="btn" id="go">Masuk</button>
+      ${ST().ownerPass === '1234' ? '<div class="hint">Password awal: <b>1234</b>. Segera ganti di menu Atur.</div>' : ''}</div>`;
+    const go = () => { if ($('#pw').value.trim() === String(ST().ownerPass)) { S.owner = true; ssSet('nb_owner', '1'); render(); } else toast('Password salah'); };
+    $('#go').onclick = go; $('#pw').onkeydown = e => { if (e.key === 'Enter') go(); };
+    return;
+  }
+  const tabs = [['atur', 'Pengaturan'], ['log', 'Riwayat'], ['data', 'Data']];
+  m.innerHTML = `<div class="row between"><h1>Area Owner</h1><button class="btn sm ghost" id="out">Keluar</button></div>
+    <div class="seg">${tabs.map(([k, l]) => `<button data-o="${k}" class="${S.ownerTab === k ? 'sel' : ''}">${l}</button>`).join('')}</div><div id="osub" class="sec"></div>`;
+  m.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { S.ownerTab = b.dataset.o; render(); });
+  $('#out').onclick = () => { S.owner = false; ssSet('nb_owner', '0'); S.tab = 'kasir'; render(); };
+  ({ log: oLog, atur: oAtur, data: oData })[S.ownerTab]($('#osub'));
+}
+
+async function oHarian(el) {
+  el.innerHTML = `${dateBar()}<div id="rbody" class="sec"><div class="hint">Memuat…</div></div>`;
+  bindDateBar();
+  try { await DB.loadRange(S.date, S.date); } catch (e) { }
+  const D = dayStats(S.date), T = D.kas?.tutup;
+  const body = $('#rbody'); if (!body) return;
+  body.innerHTML = `
+    <div class="stats">
+      <div class="stat hero"><span>Pendapatan kotor · ${D.ok.length} pelanggan</span><b>${rp(D.total)}</b></div>
+      <div class="stat"><span>Pendapatan bersih</span><b>${rp(D.total - D.totalPg)}</b></div>
+      <div class="stat"><span>Selisih kas</span><b style="color:${!T ? 'var(--muted)' : T.selisih ? 'var(--bad)' : 'var(--ok)'}">${T ? (T.selisih > 0 ? '+' : '') + rp(T.selisih) : 'Belum tutup'}</b></div>
+    </div>
+    <button class="btn gold" id="lap">Lihat laporan lengkap (JPEG)</button>
+    ${finCard(D)}${D.kas ? cashCard(D, T) : ''}
+    ${D.batal.length ? `<div class="card small"><b style="color:var(--bad)">${D.batal.length} transaksi dibatalkan</b><div class="muted">${D.batal.map(t => `${t.nota} ${esc(t.layanan)} (${esc(t.batalAlasan)})`).join('<br>')}</div></div>` : ''}
+    <h2>Transaksi</h2>
+    <div class="list">${D.tx.length ? D.tx.slice().reverse().map(txRow).join('') : '<div class="empty">Tidak ada transaksi di tanggal ini.</div>'}</div>`;
+  $('#lap').onclick = () => showReport(S.date);
+  body.querySelectorAll('[data-tx]').forEach(b => b.onclick = () => openTxDetail(DB.get(b.dataset.tx)));
+}
+
+/* ---------- bulanan ---------- */
+function monthRange(ym) { const [y, m] = ym.split('-').map(Number); const n = new Date(y, m, 0).getDate(); return { from: ym + '-01', to: ym + '-' + pad(n), n }; }
+function prevYM(ym) { const [y, m] = ym.split('-').map(Number); const d = new Date(y, m - 2, 1); return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
+function monthStats(ym) {
+  const { n } = monthRange(ym);
+  const tx = DB.list('transaksi').filter(t => t.tgl.startsWith(ym)), ok = tx.filter(t => !t.batal);
+  const pg = DB.list('pengeluaran').filter(p => p.tgl.startsWith(ym) && !p.batal);
+  const days = Array.from({ length: n }, (_, i) => ({ d: i + 1, v: 0, n: 0, tunai: 0, qris: 0, baru: 0, balik: 0, anon: 0 }));
+  const perLay = {}, perKap = {}, perJam = {}, perKat = {}; let tunai = 0, qris = 0, baru = 0, balik = 0, anon = 0, diskon = 0;
+  for (let h = 8; h <= 21; h++) perJam[h] = 0;
+  for (const t of ok) {
+    const D = days[+t.tgl.slice(8) - 1]; D.v += t.total; D.n++;
+    (perLay[t.layanan] ||= { n: 0, v: 0 }); perLay[t.layanan].n++; perLay[t.layanan].v += t.total;
+    (perKap[t.kapster] ||= { n: 0, v: 0 }); perKap[t.kapster].n++; perKap[t.kapster].v += t.total;
+    const h = new Date(t.at).getHours(); perJam[h] = (perJam[h] || 0) + 1;
+    if (t.bayar === 'QRIS') { qris += t.total; D.qris += t.total; } else { tunai += t.total; D.tunai += t.total; }
+    if (t.pelangganBaru === true) { baru++; D.baru++; } else if (t.pelangganBaru === false) { balik++; D.balik++; } else { anon++; D.anon++; }
+    diskon += t.diskon || 0;
+  }
+  for (const p of pg) perKat[p.kategori] = (perKat[p.kategori] || 0) + p.nominal;
+  // rata-rata pelanggan per hari dalam seminggu (hanya hari yang buka)
+  const dowSum = Array(7).fill(0), dowCnt = Array(7).fill(0);
+  for (const D of days) if (D.n) { const w = new Date(ym + '-' + pad(D.d) + 'T00:00:00').getDay(); dowSum[w] += D.n; dowCnt[w]++; }
+  const ORDER = [1, 2, 3, 4, 5, 6, 0];
+  const dow = ORDER.map(w => ({ label: HARI[w].slice(0, 3), v: dowCnt[w] ? dowSum[w] / dowCnt[w] : 0 }));
+  const kasDocs = DB.list('kas').filter(k => k.tgl.startsWith(ym));
+  const selisih = kasDocs.reduce((a, k) => a + (k.tutup?.selisih || 0), 0), hariSelisih = kasDocs.filter(k => k.tutup?.selisih).length;
+  const total = tunai + qris, totalPg = pg.reduce((a, p) => a + p.nominal, 0), hariBuka = days.filter(d => d.n).length;
+  const best = days.reduce((a, d) => d.v > a.v ? d : a, { v: 0, d: 0 });
+  return { ym, n, tx, ok, batal: tx.length - ok.length, days, dow, perLay, perKap, perJam, perKat, tunai, qris, total, totalPg, laba: total - totalPg, baru, balik, anon, diskon, selisih, hariSelisih, hariBuka, best, avg: hariBuka ? total / hariBuka : 0, avgN: hariBuka ? ok.length / hariBuka : 0 };
+}
+
+/* ---------- daftar grafik bulanan (dipakai di layar & PDF) ---------- */
+const COL = { tunai: '#a8895a', qris: '#3b5f8a', baru: '#a8895a', balik: '#1b1916', anon: '#d6ccb8' };
+function monthCharts(M) {
+  const dl = M.days.map(d => String(d.d)), cnt = v => String(Math.round(v)), dec = v => v.toFixed(1).replace('.', ',');
+  const jk = Object.keys(M.perJam).map(Number).sort((a, b) => a - b);
+  const sorted = (o, k) => Object.entries(o).sort((a, b) => (b[1][k] ?? b[1]) - (a[1][k] ?? a[1]));
+  return [
+    { title: 'Pemasukan per hari', note: `Rata-rata ${rp(M.avg)} per hari buka · tertinggi tgl ${M.best.d || '-'} (${rp(M.best.v)})`,
+      draw: (x, o) => barChart(x, { ...o, labels: dl, series: [{ vals: M.days.map(d => d.v), color: C.gold }], avg: M.avg, fmt: rpk }) },
+    { title: 'Jumlah pelanggan per hari', note: `${M.ok.length} kepala sebulan · rata-rata ${dec(M.avgN)} kepala per hari buka`,
+      draw: (x, o) => barChart(x, { ...o, labels: dl, series: [{ vals: M.days.map(d => d.n), color: C.ink }], avg: M.avgN, fmt: cnt, int: true, avgFmt: dec }) },
+    { title: 'Pelanggan baru vs balik lagi', note: `${M.baru} baru · ${M.balik} balik lagi · ${M.anon} tanpa data pelanggan`,
+      draw: (x, o) => barChart(x, { ...o, labels: dl, series: [{ name: 'Balik lagi', vals: M.days.map(d => d.balik), color: COL.balik }, { name: 'Baru', vals: M.days.map(d => d.baru), color: COL.baru }, { name: 'Tanpa data', vals: M.days.map(d => d.anon), color: COL.anon }], fmt: cnt, int: true }) },
+    { title: 'Rata-rata pelanggan per hari (Senin–Minggu)', note: 'Membantu atur jadwal kapster: hari ramai perlu lebih banyak orang.',
+      draw: (x, o) => barChart(x, { ...o, labels: M.dow.map(d => d.label), series: [{ vals: M.dow.map(d => d.v), color: C.gold }], fmt: cnt, int: true, valueLabels: dec }) },
+    { title: 'Jam ramai', note: 'Total pelanggan per jam selama sebulan (jam buka 08.00–22.00).',
+      draw: (x, o) => barChart(x, { ...o, labels: jk.map(h => pad(h)), series: [{ vals: jk.map(h => M.perJam[h]), color: C.ink }], fmt: cnt, int: true }) },
+    { title: 'Layanan terlaris', note: 'Jumlah kepala per layanan, beserta pendapatannya.', hbar: true,
+      draw: (x, o) => hbarChart(x, { ...o, rows: sorted(M.perLay, 'n').map(([k, v]) => [k, v.n, v.n + ' kepala · ' + rp(v.v)]), color: C.gold }) },
+    { title: 'Pendapatan per kapster', note: 'Jumlah kepala dan pendapatan yang dikerjakan tiap kapster.', hbar: true,
+      draw: (x, o) => hbarChart(x, { ...o, rows: sorted(M.perKap, 'v').map(([k, v]) => [k, v.v, rp(v.v) + ' · ' + v.n + ' kepala']), color: C.ink }) },
+    { title: 'Pengeluaran per kategori', note: `Total ${rp(M.totalPg)} · pendapatan bersih ${rp(M.laba)} (sebelum gaji)`, hbar: true,
+      draw: (x, o) => hbarChart(x, { ...o, rows: sorted(M.perKat).map(([k, v]) => [k, v, rp(v)]), color: C.bad }) }
+  ];
+}
+
+/* bar chart (tunggal atau bertumpuk) */
+function barChart(x, { x0 = 0, y0 = 0, w, h, fs = 1, labels, series, avg = null, fmt = String, int = false, avgFmt = null, valueLabels = null }) {
+  const stacked = series.length > 1, legendH = stacked ? 22 * fs : 0;
+  const L = 46 * fs, B = 22 * fs, Tp = 16 * fs + legendH, R = 6 * fs, pw = w - L - R, ph = h - B - Tp;
+  const tot = labels.map((_, i) => series.reduce((a, s) => a + (s.vals[i] || 0), 0));
+  const max = Math.max(1, ...tot, avg || 0), nice = int ? Math.max(4, Math.ceil(max / 4) * 4) : niceMax(max), step = pw / Math.max(1, labels.length);
+  x.save(); x.translate(x0, y0); x.textBaseline = 'middle';
+  if (stacked) { let lx = L; x.font = `600 ${11 * fs}px Manrope, sans-serif`; x.textAlign = 'left'; series.forEach(s => { x.fillStyle = s.color; x.fillRect(lx, 4 * fs, 11 * fs, 11 * fs); x.fillStyle = C.ink; x.fillText(s.name, lx + 15 * fs, 10 * fs); lx += x.measureText(s.name).width + 34 * fs; }); }
+  x.font = `500 ${10 * fs}px Manrope, sans-serif`;
+  for (let i = 0; i <= 4; i++) { const v = nice / 4 * i, yy = Tp + ph - ph * v / nice; x.strokeStyle = '#ece5d6'; x.lineWidth = 1; x.beginPath(); x.moveTo(L, yy); x.lineTo(w - R, yy); x.stroke(); x.fillStyle = C.muted; x.textAlign = 'right'; x.fillText(fmt(v), L - 6 * fs, yy); }
+  labels.forEach((_, i) => { let base = Tp + ph; series.forEach(s => { const v = s.vals[i] || 0, bh = ph * v / nice; if (!bh) return; x.fillStyle = s.color; x.fillRect(L + i * step + step * .15, base - bh, step * .7, bh); base -= bh; }); });
+  if (valueLabels) { x.fillStyle = C.ink; x.textAlign = 'center'; x.textBaseline = 'bottom'; x.font = `700 ${11 * fs}px Manrope, sans-serif`; tot.forEach((v, i) => v && x.fillText(valueLabels(v), L + i * step + step / 2, Tp + ph - ph * v / nice - 3 * fs)); }
+  x.fillStyle = C.muted; x.textAlign = 'center'; x.textBaseline = 'top'; x.font = `500 ${10 * fs}px Manrope, sans-serif`;
+  const every = Math.ceil(labels.length / (pw / (24 * fs)));
+  labels.forEach((l, i) => { if (i % every === 0) x.fillText(l, L + i * step + step / 2, Tp + ph + 6 * fs); });
+  if (avg) { const yy = Tp + ph - ph * avg / nice; x.strokeStyle = C.bad; x.setLineDash([5 * fs, 4 * fs]); x.lineWidth = 1.5 * fs; x.beginPath(); x.moveTo(L, yy); x.lineTo(w - R, yy); x.stroke(); x.setLineDash([]); x.fillStyle = C.bad; x.textAlign = 'right'; x.textBaseline = 'bottom'; x.font = `700 ${10 * fs}px Manrope, sans-serif`; x.fillText('rata-rata ' + (avgFmt || fmt)(avg), w - R, yy - 3 * fs); }
+  x.restore();
+}
+function hbarChart(x, { x0 = 0, y0 = 0, w, h, fs = 1, rows, color }) {
+  x.save(); x.translate(x0, y0);
+  if (!rows.length) { x.fillStyle = C.muted; x.font = `500 ${13 * fs}px Manrope, sans-serif`; x.textAlign = 'left'; x.textBaseline = 'top'; x.fillText('Belum ada data.', 0, 4 * fs); x.restore(); return; }
+  const max = Math.max(1, ...rows.map(r => r[1])), rowH = Math.min(52 * fs, h / rows.length);
+  rows.forEach(([k, v, lab], i) => {
+    const yy = i * rowH; x.textBaseline = 'alphabetic';
+    x.font = `700 ${13 * fs}px Manrope, sans-serif`; x.fillStyle = C.ink; x.textAlign = 'left'; x.fillText(k, 0, yy + 16 * fs);
+    x.font = `600 ${12 * fs}px Manrope, sans-serif`; x.fillStyle = C.muted; x.textAlign = 'right'; x.fillText(lab, w, yy + 16 * fs);
+    x.fillStyle = '#ebe3d2'; x.fillRect(0, yy + 23 * fs, w, 12 * fs); x.fillStyle = color; x.fillRect(0, yy + 23 * fs, Math.max(2 * fs, w * v / max), 12 * fs);
+  });
+  x.restore();
+}
+function niceMax(v) { const p = Math.pow(10, Math.floor(Math.log10(v))), f = v / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
+function chartHeight(c, M) { return c.hbar ? Math.max(70, Object.keys(c.title.includes('Layanan') ? M.perLay : c.title.includes('kapster') ? M.perKap : M.perKat).length * 52) : 210; }
+
+async function oBulanan(el) {
+  el.innerHTML = `<input id="rm" class="in" type="month" value="${S.repMonth}" max="${today().slice(0, 7)}"><div id="mbody" class="sec"><div class="hint">Memuat data bulan ini…</div></div>`;
+  $('#rm').onchange = () => { S.repMonth = $('#rm').value || today().slice(0, 7); oBulanan(el); };
+  const ym = S.repMonth, pv = prevYM(ym);
+  try { await DB.loadRange(monthRange(pv).from, monthRange(ym).to); } catch (e) { toast('Gagal memuat sebagian data'); }
+  const M = monthStats(ym), P = monthStats(pv), body = $('#mbody'); if (!body) return;
+  const delta = (a, b) => b ? `<span class="d" style="color:${a >= b ? 'var(--ok)' : 'var(--bad)'}">${a >= b ? '▲' : '▼'} ${Math.abs(Math.round((a - b) / b * 100))}% vs ${BULAN[+pv.slice(5) - 1].slice(0, 3)}</span>` : '<span class="d muted">belum ada data bulan lalu</span>';
+  const charts = monthCharts(M);
+  body.innerHTML = `
+    <div class="grid2"><button class="btn gold" id="pdf">Export PDF</button><button class="btn" id="xls">Export Excel</button></div>
+    <div class="stats">
+      <div class="stat hero"><span>Pendapatan kotor ${fmtBln(ym)}</span><b>${rp(M.total)}</b>${delta(M.total, P.total)}</div>
+      <div class="stat"><span>Pelanggan</span><b>${M.ok.length}</b>${delta(M.ok.length, P.ok.length)}</div>
+      <div class="stat"><span>Rata-rata / hari</span><b>${rp(M.avg)}</b><span class="d muted">${M.avgN.toFixed(1).replace('.', ',')} kepala · ${M.hariBuka} hari buka</span></div>
+      <div class="stat"><span>Pengeluaran</span><b>${rp(M.totalPg)}</b></div>
+      <div class="stat"><span>Pendapatan bersih</span><b>${rp(M.laba)}</b><span class="d muted">sebelum gaji & biaya bulanan</span></div>
+      <div class="stat"><span>Selisih kas</span><b style="color:${M.selisih ? 'var(--bad)' : 'var(--ok)'}">${rp(M.selisih)}</b><span class="d muted">${M.hariSelisih} hari ada selisih</span></div>
+      <div class="stat"><span>Transaksi batal</span><b>${M.batal}</b><span class="d muted">${M.diskon ? 'promo ' + rp(M.diskon) : 'tanpa promo'}</span></div>
+    </div>
+    ${charts.map((c, i) => `<div class="card sec"><h2>${esc(c.title)}</h2><canvas id="ch${i}" style="width:100%;height:${chartHeight(c, M)}px"></canvas><div class="hint">${esc(c.note)}</div></div>`).join('')}
+    <div class="hint">PDF berisi slide ringkasan dan semua grafik di atas, siap dipresentasikan. Excel berisi rekap harian, transaksi, pengeluaran, layanan, dan kapster.</div>`;
+  charts.forEach((c, i) => {
+    const cv = $('#ch' + i), r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    cv.width = r.width * dpr; cv.height = r.height * dpr; const x = cv.getContext('2d'); x.scale(dpr, dpr);
+    c.draw(x, { w: r.width, h: r.height });
+  });
+  $('#pdf').onclick = () => exportPDF(M, P);
+  $('#xls').onclick = () => exportXLS(M);
+}
+
+/* ---------- export ---------- */
+function loadScript(src) { return new Promise((res, rej) => { if (document.querySelector(`script[src="${src}"]`)) return res(); const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('Gagal memuat ' + src)); document.head.appendChild(s); }); }
+async function exportPDF(M, P) {
+  toast('Menyusun PDF…');
+  try { await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'); } catch (e) { return toast('Perlu internet untuk export PDF'); }
+  await document.fonts.ready; const logo = await loadLogo(), s = ST();
+  const W = 1280, H = 720, slides = [];
+  const mk = (title, fn, note) => { const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d'); x.fillStyle = C.cream; x.fillRect(0, 0, W, H);
+    if (title) { x.fillStyle = C.ink; x.fillRect(0, 0, W, 110); if (logo) x.drawImage(logo, 40, 12, 86 * logo.width / logo.height, 86); x.fillStyle = C.gold2; x.font = '600 18px "Josefin Sans", sans-serif'; x.textAlign = 'left'; x.fillText((s.toko + ' · ' + fmtBln(M.ym)).toUpperCase(), 145, 46); x.fillStyle = C.cream; x.font = '800 34px Manrope, sans-serif'; x.fillText(title, 145, 86); }
+    if (note) { x.fillStyle = C.muted; x.font = '600 20px Manrope, sans-serif'; x.textAlign = 'left'; x.fillText(note, 40, H - 28); }
+    fn(x); slides.push(c); };
+  const big = (x, X, Y, w, lab, val, sub, dark) => { x.fillStyle = dark ? C.ink : C.paper; x.fillRect(X, Y, w, 150); x.strokeStyle = C.line; x.lineWidth = 2; if (!dark) x.strokeRect(X, Y, w, 150); x.textAlign = 'left'; x.fillStyle = dark ? C.gold2 : C.muted; x.font = '600 17px "Josefin Sans", sans-serif'; x.fillText(lab.toUpperCase(), X + 24, Y + 40); x.fillStyle = dark ? C.cream : C.ink; x.font = '800 38px Manrope, sans-serif'; x.fillText(val, X + 24, Y + 92); if (sub) { x.fillStyle = dark ? '#d9cfbd' : C.muted; x.font = '500 17px Manrope, sans-serif'; x.fillText(sub, X + 24, Y + 128); } };
+  const pct = (a, b) => b ? (a >= b ? '▲ ' : '▼ ') + Math.abs(Math.round((a - b) / b * 100)) + '% vs bulan lalu' : 'bulan lalu belum ada data';
+  mk(null, x => { x.fillStyle = C.ink; x.fillRect(0, 0, W, H); if (logo) { const lh = 330; x.drawImage(logo, (W - lh * logo.width / logo.height) / 2, 70, lh * logo.width / logo.height, lh); }
+    x.textAlign = 'center'; x.fillStyle = C.gold2; x.font = '600 26px "Josefin Sans", sans-serif'; x.fillText('LAPORAN BULANAN', W / 2, 470); x.fillStyle = C.cream; x.font = '800 60px Manrope, sans-serif'; x.fillText(fmtBln(M.ym), W / 2, 545); x.fillStyle = '#a39886'; x.font = '500 22px Manrope, sans-serif'; x.fillText(s.alamat, W / 2, 600); });
+  mk('Ringkasan', x => { const w = (W - 80 - 48) / 3;
+    big(x, 40, 150, w, 'Pendapatan kotor', rp(M.total), pct(M.total, P.total), true); big(x, 64 + w, 150, w, 'Jumlah pelanggan', String(M.ok.length), pct(M.ok.length, P.ok.length)); big(x, 88 + 2 * w, 150, w, 'Rata-rata per hari', rp(M.avg), M.avgN.toFixed(1).replace('.', ',') + ' kepala · ' + M.hariBuka + ' hari buka');
+    big(x, 40, 330, w, 'Tunai', rp(M.tunai), M.total ? Math.round(M.tunai / M.total * 100) + '% dari pemasukan' : ''); big(x, 64 + w, 330, w, 'QRIS', rp(M.qris), M.total ? Math.round(M.qris / M.total * 100) + '% dari pemasukan' : ''); big(x, 88 + 2 * w, 330, w, 'Pengeluaran', rp(M.totalPg), '');
+    big(x, 40, 510, w, 'Pendapatan bersih', rp(M.laba), 'kotor − pengeluaran (sebelum gaji)', true); big(x, 64 + w, 510, w, 'Selisih kas', rp(M.selisih), M.hariSelisih + ' hari ada selisih'); big(x, 88 + 2 * w, 510, w, 'Transaksi batal', String(M.batal), M.diskon ? 'promo ' + rp(M.diskon) : ''); });
+  for (const c of monthCharts(M)) mk(c.title, x => c.draw(x, { x0: 40, y0: 150, w: W - 80, h: c.hbar ? 470 : 490, fs: 1.6 }), c.note);
+  mk(null, x => { x.fillStyle = C.ink; x.fillRect(0, 0, W, H); if (logo) { const lh = 240; x.drawImage(logo, (W - lh * logo.width / logo.height) / 2, 150, lh * logo.width / logo.height, lh); } x.textAlign = 'center'; x.fillStyle = C.cream; x.font = '800 54px Manrope, sans-serif'; x.fillText('Terima kasih', W / 2, 470); x.fillStyle = C.gold2; x.font = '600 24px "Josefin Sans", sans-serif'; x.fillText(s.tagline.toUpperCase(), W / 2, 520); });
+  const { jsPDF } = window.jspdf; const doc = new jsPDF({ orientation: 'landscape', unit: 'px', format: [W, H], hotfixes: ['px_scaling'] });
+  slides.forEach((c, i) => { if (i) doc.addPage([W, H], 'landscape'); doc.addImage(c.toDataURL('image/jpeg', .85), 'JPEG', 0, 0, W, H); });
+  shareBlob(doc.output('blob'), `Laporan-Bulanan-${M.ym}.pdf`, 'Laporan ' + fmtBln(M.ym));
+}
+async function exportXLS(M) {
+  toast('Menyusun Excel…');
+  try { await loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'); } catch (e) { return toast('Perlu internet untuk export Excel'); }
+  const wb = XLSX.utils.book_new(), add = (name, rows) => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), name);
+  const kas = Object.fromEntries(DB.list('kas').filter(k => k.tgl.startsWith(M.ym)).map(k => [k.tgl, k]));
+  add('Rekap Harian', M.days.map(d => { const tgl = M.ym + '-' + pad(d.d), D = dayStats(tgl), T = kas[tgl]?.tutup; return { Tanggal: tgl, Kepala: d.n, Pemasukan: d.v, Tunai: D.tunai, QRIS: D.qris, Pengeluaran: D.totalPg, 'Modal': kas[tgl]?.modal ?? '', 'Kas Seharusnya': kas[tgl] ? D.seharusnya : '', 'Uang Fisik': T?.fisik ?? '', Selisih: T?.selisih ?? '', Setor: T?.setor ?? '', 'Kasir Tutup': T?.kasir ?? '' }; }));
+  add('Transaksi', M.tx.slice().sort((a, b) => a.at.localeCompare(b.at)).map(t => ({ Nota: t.nota, Tanggal: t.tgl, Jam: jam(t.at), Layanan: t.layanan, Harga: t.harga, Diskon: t.diskon || 0, 'Ket Promo': t.ketPromo || '', Total: t.batal ? 0 : t.total, Bayar: t.bayar, Kapster: t.kapster, Kasir: t.kasir, Pelanggan: t.pelanggan || '', WA: showWA(t.wa), Status: t.batal ? 'BATAL: ' + t.batalAlasan : 'OK' })));
+  add('Pengeluaran', DB.list('pengeluaran').filter(p => p.tgl.startsWith(M.ym)).sort((a, b) => a.at.localeCompare(b.at)).map(p => ({ Tanggal: p.tgl, Jam: jam(p.at), Kategori: p.kategori, Keterangan: p.ket, Nominal: p.batal ? 0 : p.nominal, Kasir: p.kasir, Status: p.batal ? 'BATAL' : 'OK' })));
+  add('Per Layanan', Object.entries(M.perLay).map(([k, v]) => ({ Layanan: k, Kepala: v.n, Pendapatan: v.v })));
+  add('Per Kapster', Object.entries(M.perKap).map(([k, v]) => ({ Kapster: k, Kepala: v.n, Pendapatan: v.v })));
+  const out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  shareBlob(new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `Rekap-${M.ym}.xlsx`, 'Rekap ' + fmtBln(M.ym));
+}
+
+/* ---------- riwayat perubahan ---------- */
+function oLog(el) {
+  const ev = [];
+  for (const t of DB.list('transaksi')) for (const l of t.log || []) ev.push({ ...l, ref: t.nota + ' · ' + t.layanan + ' ' + rp(t.harga) });
+  for (const p of DB.list('pengeluaran')) for (const l of p.log || []) ev.push({ ...l, ref: 'Pengeluaran · ' + p.ket });
+  for (const k of DB.list('kas')) { for (const l of k.log || []) ev.push({ ...l, ref: 'Kas ' + fmtTglS(k.tgl) }); if (k.tutup?.selisih) ev.push({ at: k.tutup.at, oleh: k.tutup.kasir, aksi: 'Selisih kas', detail: rp(k.tutup.selisih) + (k.tutup.catatan ? ' · ' + k.tutup.catatan : ''), ref: 'Tutup kas ' + fmtTglS(k.tgl) }); }
+  ev.sort((a, b) => b.at.localeCompare(a.at));
+  el.innerHTML = `<div class="hint">Pembatalan, perubahan, buka ulang kas, dan selisih kas selama ${CACHE_DAYS} hari terakhir.</div>
+    <div class="list">${ev.length ? ev.slice(0, 150).map(e => `<div class="item"><div class="main"><div class="t">${esc(e.aksi)} · ${esc(e.ref)}</div><div class="s" style="white-space:normal">${esc(e.detail || '')}</div><div class="s">${esc(e.oleh)} · ${fmtTglS(e.at.slice(0, 10))} ${jam(e.at)}</div></div>${e.aksi === 'Batal' || e.aksi === 'Selisih kas' ? '<span class="tag void">!</span>' : ''}</div>`).join('') : '<div class="empty">Belum ada perubahan tercatat. Bagus.</div>'}</div>`;
+}
+
+/* ---------- pengaturan ---------- */
+function oAtur(el) {
+  const s = ST();
+  el.innerHTML = `
+    <div class="card sec"><h2>Layanan & harga</h2>
+      <div id="lays" class="sec">${DB.list('layanan').sort((a, b) => (a.urut || 0) - (b.urut || 0)).map(l => `
+        <div class="sec" style="gap:6px;padding-bottom:10px;border-bottom:1px dashed var(--line)">
+          <div class="settings-row"><input class="in" data-l="${l.id}" data-f="nama" value="${esc(l.nama)}"><input class="in num" data-l="${l.id}" data-f="harga" inputmode="numeric" value="${l.harga}"><button class="chip ${l.aktif ? 'sel' : ''}" data-tog="${l.id}">${l.aktif ? 'Aktif' : 'Off'}</button></div>
+          <input class="in" data-l="${l.id}" data-f="ket" value="${esc(l.ket || '')}" placeholder="Keterangan">
+        </div>`).join('')}</div>
+      <button class="btn ghost" id="addL">+ Tambah layanan</button>
+    </div>
+    <div class="card sec"><h2>Kapster</h2>
+      <div class="chips">${DB.list('kapster').sort((a, b) => a.nama.localeCompare(b.nama)).map(k => `<button class="chip ${k.aktif ? 'sel' : ''}" data-kap="${k.id}">${esc(k.nama)}${k.aktif ? '' : ' (off)'}</button>`).join('')}<button class="chip add" id="addK">+ Tambah</button></div>
+      <div class="hint">Tekan nama untuk menonaktifkan atau mengaktifkan lagi. Nama yang off tidak muncul di kasir, tapi riwayatnya tetap ada.</div>
+    </div>
+    <div class="card sec"><h2>Info toko</h2>
+      ${[['toko', 'Nama toko'], ['tagline', 'Tagline'], ['alamat', 'Alamat'], ['wa', 'No. WA / kontak'], ['ig', 'Instagram'], ['tiktok', 'TikTok'], ['maps', 'Link Google Maps']].map(([k, l]) => `<label class="f">${l}<input class="in" data-s="${k}" value="${esc(s[k] || '')}"></label>`).join('')}
+    </div>
+    <div class="card sec"><h2>Template WhatsApp</h2>
+      <label class="f">Penutup struk<textarea class="in" data-s="tplFooter" rows="6">${esc(s.tplFooter)}</textarea></label>
+      <label class="f">Pesan pengingat<textarea class="in" data-s="tplReminder" rows="5">${esc(s.tplReminder)}</textarea></label>
+      <div class="hint">Kode yang bisa dipakai: {nama} {lama} (mis. "kemarin", "5 hari lalu", "3 minggu lalu") {hari} {tanggal} {toko} {wa} {maps} {ig} {tiktok} {alamat}</div>
+      <label class="f">Masuk daftar "lama tak datang" setelah (hari)<input class="in num" data-s="reminderDays" inputmode="numeric" value="${s.reminderDays}"></label>
+    </div>
+    <div class="card sec"><h2>Password owner</h2><input class="in" id="np" type="password" placeholder="Password baru (min. 4 karakter)"><button class="btn ghost" id="savePw">Ganti password</button></div>
+    <div class="card sec"><h2>Koneksi online (Supabase)</h2>
+      <label class="f">Project URL<input class="in" id="cu" value="${esc(DB.cfg.url)}" placeholder="https://xxxx.supabase.co"></label>
+      <label class="f">Publishable / anon key<input class="in" id="ck" value="${esc(DB.cfg.key)}" placeholder="sb_publishable_… atau eyJ…"></label>
+      <div class="hint">Status: <b>${DB.status === 'on' ? 'Terhubung' : DB.status === 'local' ? 'Mode lokal (data hanya di HP ini)' : 'Belum tersambung'}</b>${DB.lastErr && DB.status === 'off' ? '<br>Error terakhir: ' + esc(DB.lastErr) : ''}${Object.keys(DB.pending).length ? '<br>' + Object.keys(DB.pending).length + ' data menunggu dikirim.' : ''}</div>
+      <button class="btn" id="saveC">Simpan & sambungkan</button>
+      <div class="hint">Isi koneksi yang sama di setiap HP (kasir dan owner) supaya datanya sinkron. Data lokal yang sudah ada ikut dikirim saat tersambung.</div>
+    </div>
+`;
+  // layanan
+  el.querySelectorAll('[data-l]').forEach(i => i.onchange = () => { const l = DB.get(i.dataset.l), f = i.dataset.f; l[f] = f === 'harga' ? parseNum(i.value) : i.value.trim(); DB.put('layanan', l); toast('Layanan disimpan'); });
+  el.querySelectorAll('[data-tog]').forEach(b => b.onclick = () => { const l = DB.get(b.dataset.tog); l.aktif = !l.aktif; DB.put('layanan', l); render(); });
+  $('#addL').onclick = async () => { const n = await ask({ title: 'Layanan baru', input: { label: 'Nama layanan', required: 'Isi namanya' }, ok: 'Tambah' }); if (!n) return; DB.put('layanan', { id: uid('lay'), nama: n, harga: 0, ket: '', aktif: true, urut: DB.list('layanan').length + 1 }); render(); toast('Isi harganya di daftar'); };
+  el.querySelectorAll('[data-kap]').forEach(b => b.onclick = () => { const k = DB.get(b.dataset.kap); k.aktif = !k.aktif; DB.put('kapster', k); render(); });
+  $('#addK').onclick = async () => { await tambahKapster(); render(); };
+  el.querySelectorAll('[data-s]').forEach(i => i.onchange = () => { const st = ST(); st[i.dataset.s] = i.dataset.s === 'reminderDays' ? (parseNum(i.value) || 28) : i.value; DB.put('settings', st); toast('Pengaturan disimpan'); if (i.dataset.s === 'toko') { shell(); render(); } });
+  $('#savePw').onclick = () => { const v = $('#np').value; if (v.length < 4) return toast('Minimal 4 karakter'); const st = ST(); st.ownerPass = v; DB.put('settings', st); $('#np').value = ''; toast('Password diganti'); };
+  $('#saveC').onclick = async () => {
+    DB.cfg = { url: $('#cu').value.trim(), key: $('#ck').value.trim() }; lsSet('nb_cfg', DB.cfg);
+    if (!DB.online()) { DB.status = 'local'; setStatus(); return render(); }
+    for (const [id, d] of Object.entries(DB.docs)) DB.pending[id] = d;   // kirim semua data lokal
+    toast('Menyambungkan…'); await DB.pull(); await DB.flush(); render();
+    toast(DB.status === 'on' ? 'Tersambung ✓' : 'Gagal tersambung. Cek URL & key.');
+  };
+}
+
+/* ============================================================
+   DATA: BACKUP, IMPORT, RESET
+   ============================================================ */
+const TX_COLS = ['transaksi', 'pengeluaran', 'kas', 'pelanggan'];
+function oData(el) {
+  const cnt = c => DB.list(c).length;
+  el.innerHTML = `
+    <div class="card sec"><h2>Backup data</h2>
+      <div class="hint">Simpan semua data (transaksi, pengeluaran, kas, pelanggan, kapster, layanan, pengaturan) ke satu file .json. Simpan di Google Drive atau kirim ke WA sendiri.</div>
+      <button class="btn" id="exp">Export backup</button></div>
+    <div class="card sec"><h2>Import dari backup</h2>
+      <div class="hint">Data yang sudah ada tidak akan dobel. Setiap data punya ID sendiri, jadi data dengan ID yang sama diperbarui, bukan ditambah. Kalau data di HP ini lebih baru, data di HP ini yang dipakai.</div>
+      <label class="btn ghost" for="impF" style="cursor:pointer">Pilih file backup (.json)</label><input id="impF" type="file" accept=".json,application/json" hidden></div>
+    <div class="card sec" style="border-color:#e7c6c0"><h2 style="color:var(--bad)">Reset data</h2>
+      <div class="hint">Untuk mulai dari nol setelah uji coba. Tidak bisa dibatalkan, jadi export backup dulu.</div>
+      <div class="kv small"><div><span>Transaksi</span><b>${cnt('transaksi')}</b></div><div><span>Pengeluaran</span><b>${cnt('pengeluaran')}</b></div><div><span>Hari kas</span><b>${cnt('kas')}</b></div><div><span>Pelanggan</span><b>${cnt('pelanggan')}</b></div></div>
+      <button class="btn danger" id="rst1">Reset transaksi saja</button>
+      <div class="hint">Menghapus transaksi, pengeluaran, kas, pelanggan, dan riwayat. Kapster, harga layanan, template WA, password, dan koneksi tetap.</div>
+      <button class="btn danger" id="rst2">Reset total</button>
+      <div class="hint">Menghapus semuanya termasuk kapster, layanan, dan pengaturan. Aplikasi kembali seperti baru dipasang (password kembali 1234). Koneksi online tetap tersimpan.</div>
+    </div>`;
+  $('#exp').onclick = exportBackup;
+  $('#impF').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) importBackup(f); };
+  $('#rst1').onclick = () => resetData('transaksi');
+  $('#rst2').onclick = () => resetData('total');
+}
+async function exportBackup() {
+  toast('Menyiapkan backup…');
+  let docs; try { docs = await DB.fetchAll(); } catch (e) { return toast('Gagal mengambil data online: ' + e.message); }
+  const local = Object.values(DB.pending); const map = Object.fromEntries(docs.map(d => [d.id, d])); local.forEach(d => map[d.id] = d);
+  const out = { app: 'naufals-barber-kasir', versi: 1, dibuat: nowISO(), jumlah: Object.keys(map).length, docs: Object.values(map) };
+  const stamp = today() + '_' + jam(nowISO()).replace('.', '');
+  shareBlob(new Blob([JSON.stringify(out)], { type: 'application/json' }), `Backup-Kasir-Barber-${stamp}.json`, 'Backup kasir');
+  return true;
+}
+async function importBackup(file) {
+  let data; try { data = JSON.parse(await file.text()); } catch (e) { return toast('File tidak bisa dibaca. Pastikan ini file backup .json'); }
+  if (data?.app !== 'naufals-barber-kasir' || !Array.isArray(data.docs)) return toast('Ini bukan file backup kasir barber');
+  const ok = await ask({ title: 'Import backup?', body: `File berisi ${data.docs.length} data, dibuat ${fmtTglS(String(data.dibuat).slice(0, 10))}. Data yang sama tidak akan dobel.`, ok: 'Import' });
+  if (!ok) return;
+  let baru = 0, upd = 0, skip = 0;
+  for (const d of data.docs) {
+    if (!d?.id || !d.col || !d.data || d.id === 'reset') { skip++; continue; }
+    const cur = DB.docs[d.id];
+    if (cur && new Date(cur.updated_at) >= new Date(d.updated_at)) { skip++; continue; }
+    cur ? upd++ : baru++;
+    DB.docs[d.id] = d; DB.pending[d.id] = d;
+  }
+  DB.saveCache(); DB.flush(); shell(); render();
+  ask({ title: 'Import selesai', body: `${baru} data baru ditambahkan, ${upd} diperbarui, ${skip} dilewati karena sudah ada atau lebih baru di HP ini.`, ok: 'OK', cancel: 'Tutup' });
+}
+async function resetData(scope) {
+  const total = scope === 'total';
+  const step1 = await ask({ title: total ? 'Reset total?' : 'Reset transaksi?', body: 'Sebaiknya export backup dulu. Tekan "Export dulu" untuk menyimpan backup, lalu ulangi reset.', ok: 'Lanjut tanpa backup', cancel: 'Export dulu', danger: true });
+  if (!step1) return exportBackup();
+  const typed = await ask({ title: 'Ketik HAPUS untuk konfirmasi', body: total ? 'Semua data dan pengaturan akan dihapus dari semua HP yang tersambung.' : 'Transaksi, pengeluaran, kas, dan pelanggan akan dihapus dari semua HP yang tersambung.', input: { label: 'Konfirmasi', ph: 'HAPUS', required: 'Ketik HAPUS' }, ok: 'Hapus permanen', danger: true });
+  if (typed == null) return;
+  if (typed.trim().toUpperCase() !== 'HAPUS') return toast('Konfirmasi salah, tidak ada yang dihapus');
+  const cols = total ? null : TX_COLS;
+  try { await DB.remove(total ? 'id=not.is.null' : 'col=in.(' + TX_COLS.join(',') + ')'); }
+  catch (e) { return toast('Gagal menghapus data online: ' + e.message + '. Cek izin hapus di SQL Supabase.'); }
+  const at = nowISO();
+  wipeLocal(cols, at);
+  DB.put('meta', { id: 'reset', at, scope });
+  lsSet('nb_resetSeen', at);
+  if (total) { DB.put('settings', { ...DEF_SETTINGS }); DEF_LAYANAN.forEach(l => DB.put('layanan', { ...l })); S.kasir = ''; lsSet('nb_kasir', ''); S.owner = false; ssSet('nb_owner', '0'); }
+  S.date = today(); S.tab = 'kasir'; shell(); render();
+  toast(total ? 'Reset total selesai' : 'Data transaksi direset. Mulai dari nol!', 3000);
+}
+function wipeLocal(cols, before) {
+  for (const [id, d] of Object.entries(DB.docs)) {
+    if (id === 'reset') continue;
+    if ((!cols || cols.includes(d.col)) && new Date(d.updated_at) <= new Date(before)) { delete DB.docs[id]; delete DB.pending[id]; }
+  }
+  DB.saveCache();
+}
+function applyRemoteReset() {   // HP lain yang ikut tersambung ikut bersih setelah reset
+  const r = DB.get('reset'); if (!r || r.at <= lsGet('nb_resetSeen', '')) return;
+  wipeLocal(r.scope === 'total' ? null : TX_COLS, r.at); lsSet('nb_resetSeen', r.at);
+  if (r.scope === 'total') { S.kasir = ''; lsSet('nb_kasir', ''); }
+  if (!DB.get('settings')) seedIfEmpty();
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+(async function boot() {
+  DB.init();
+  if (!DB.online() || DB.get('settings')) seedIfEmpty();   // HP baru yang online: tunggu data online dulu
+  shell(); render();
+  if (DB.online()) { await DB.pull(); if (DB.status !== 'off') seedIfEmpty(); shell(); render(); }
+  setInterval(() => { if (S.followToday && S.date !== today()) { S.date = today(); if (!$('#scrim')) render(); } }, 30000);
+  setInterval(async () => { if (document.hidden || !DB.online()) return; await DB.pull(); if (!$('#scrim') && !document.activeElement?.matches('input,textarea')) render(); }, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && DB.online()) DB.pull().then(() => { if (!$('#scrim')) render(); }); });
+  window.addEventListener('online', () => DB.flush());
+})();
+
+</script>
+</body>
+</html>
