@@ -340,11 +340,12 @@ const tplVars = () => { const s = ST(); return { toko: s.toko, wa: s.wa, maps: s
 function addLog(obj, aksi, detail) {
   obj.log = obj.log || []; obj.log.push({ at: nowISO(), oleh: S.kasir || 'Owner', aksi, detail });
 }
-function nextNota(tgl) {
-  const ym = tgl.slice(0, 7); let max = 0;
-  for (const t of DB.list('transaksi')) if (t.tgl.slice(0, 7) === ym) { const n = parseInt(String(t.nota).replace(/\D/g, ''), 10); if (n > max) max = n; }
-  return (ST().prefix || 'NB') + String(max + 1).padStart(4, '0');
+function nextNota(tgl) {   // hanya menghitung nota buatan aplikasi (mis. NB0012), bukan data dari kertas
+  const ym = tgl.slice(0, 7), pre = ST().prefix || 'NB', re = new RegExp('^' + pre + '(\\d+)$'); let max = 0;
+  for (const t of DB.list('transaksi')) if (t.tgl.slice(0, 7) === ym) { const m = re.exec(String(t.nota)); if (m && +m[1] > max) max = +m[1]; }
+  return pre + String(max + 1).padStart(4, '0');
 }
+const tjam = t => t.jamPerkiraan ? '–' : jam(t.at);   // data kertas tanpa jam
 
 /* ============================================================
    STATE + SHELL
@@ -480,7 +481,7 @@ function vKasir() {
 function txRow(t) {
   return `<button class="item ${t.batal ? 'void' : ''}" data-tx="${t.id}">
     <div class="main"><div class="t">${esc(t.layanan)} · ${esc(t.kapster)}</div>
-    <div class="s">${t.nota} · ${jam(t.at)}${t.pelanggan ? ' · ' + esc(t.pelanggan) : ''}${t.diskon ? ' · promo ' + esc(t.ketPromo || '') : ''}</div></div>
+    <div class="s">${t.nota} · ${tjam(t)}${t.pelanggan ? ' · ' + esc(t.pelanggan) : ''}${t.diskon ? ' · promo ' + esc(t.ketPromo || '') : ''}</div></div>
     ${t.batal ? '<span class="tag void">BATAL</span>' : `<span class="tag ${t.bayar === 'QRIS' ? 'qris' : 'tunai'}">${t.bayar}</span>`}
     <div class="v">${rp(t.total)}</div></button>`;
 }
@@ -640,7 +641,7 @@ function strukText(t) {
   const d = new Date(t.at);
   const body = [
     s.toko.toUpperCase(), s.alamat, L,
-    kv('No. Nota', t.nota), kv('Tanggal', pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + jam(t.at)),
+    kv('No. Nota', t.nota), kv('Tanggal', pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + tjam(t)),
     kv('Kapster', t.kapster), t.pelanggan ? kv('Pelanggan', t.pelanggan.slice(0, 18)) : null, L,
     kv(t.layanan, rp(t.harga)), t.diskon ? kv('Diskon (' + t.ketPromo.slice(0, 12) + ')', '-' + rp(t.diskon)) : null,
     kv('TOTAL', rp(t.total)), kv('Pembayaran', t.bayar), L
@@ -650,7 +651,7 @@ function strukText(t) {
 
 /* ---------- detail / edit / batal ---------- */
 function openTxDetail(t) {
-  const sh = openSheet(`<div class="hd"><div><h2>${t.nota} · ${jam(t.at)}</h2><h1>${esc(t.layanan)}</h1></div><button class="x" id="cx">×</button></div>
+  const sh = openSheet(`<div class="hd"><div><h2>${t.nota} · ${tjam(t)}</h2><h1>${esc(t.layanan)}</h1></div><button class="x" id="cx">×</button></div>
     ${t.batal ? `<div class="card" style="border-color:#e7c6c0"><b style="color:var(--bad)">Dibatalkan</b><div class="small muted">Alasan: ${esc(t.batalAlasan)} · ${esc(t.batalOleh)} ${jam(t.batalAt)}</div></div>` : ''}
     <div class="card kv">
       <div><span>Kapster</span><b>${esc(t.kapster)}</b></div><div><span>Kasir</span><b>${esc(t.kasir)}</b></div>
@@ -999,7 +1000,7 @@ async function renderDailyCanvas(tgl) {
   ['NOTA', 'JAM', 'LAYANAN', 'KAPSTER', 'BAYAR', 'TOTAL'].forEach((h, i) => txt(h, cols[i], y, { a: i === 5 ? 'right' : 'left', c: C.muted })); y += 38;
   D.tx.forEach(t => {
     const c = t.batal ? '#a39886' : C.ink; F(500, 24);
-    txt(t.nota.replace(/^\D+/, ''), cols[0], y, { c }); txt(jam(t.at), cols[1], y, { c }); txt(t.layanan.slice(0, 16), cols[2], y, { c }); txt(t.kapster.slice(0, 13), cols[3], y, { c });
+    txt(t.nota.replace(/^\D+/, ''), cols[0], y, { c }); txt(tjam(t), cols[1], y, { c }); txt(t.layanan.slice(0, 16), cols[2], y, { c }); txt(t.kapster.slice(0, 13), cols[3], y, { c });
     txt(t.batal ? 'BATAL' : t.bayar, cols[4], y, { c: t.batal ? C.bad : t.bayar === 'QRIS' ? C.qris : c }); F(700, 24); txt(rp(t.total), cols[5], y, { a: 'right', c });
     if (t.batal) { x.fillStyle = '#a39886'; x.fillRect(cols[0], y - 9, W - 2 * P, 2); }
     y += 30;
@@ -1114,7 +1115,7 @@ function monthStats(ym) {
     const D = days[+t.tgl.slice(8) - 1]; D.v += t.total; D.n++;
     (perLay[t.layanan] ||= { n: 0, v: 0 }); perLay[t.layanan].n++; perLay[t.layanan].v += t.total;
     (perKap[t.kapster] ||= { n: 0, v: 0 }); perKap[t.kapster].n++; perKap[t.kapster].v += t.total;
-    const h = new Date(t.at).getHours(); perJam[h] = (perJam[h] || 0) + 1;
+    if (!t.jamPerkiraan) { const h = new Date(t.at).getHours(); perJam[h] = (perJam[h] || 0) + 1; }
     if (t.bayar === 'QRIS') { qris += t.total; D.qris += t.total; } else { tunai += t.total; D.tunai += t.total; }
     if (t.pelangganBaru === true) { baru++; D.baru++; } else if (t.pelangganBaru === false) { balik++; D.balik++; } else { anon++; D.anon++; }
     diskon += t.diskon || 0;
@@ -1252,7 +1253,7 @@ async function exportXLS(M) {
   const wb = XLSX.utils.book_new(), add = (name, rows) => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), name);
   const kas = Object.fromEntries(DB.list('kas').filter(k => k.tgl.startsWith(M.ym)).map(k => [k.tgl, k]));
   add('Rekap Harian', M.days.map(d => { const tgl = M.ym + '-' + pad(d.d), D = dayStats(tgl), T = kas[tgl]?.tutup; return { Tanggal: tgl, Kepala: d.n, Pemasukan: d.v, Tunai: D.tunai, QRIS: D.qris, Pengeluaran: D.totalPg, 'Modal': kas[tgl]?.modal ?? '', 'Kas Seharusnya': kas[tgl] ? D.seharusnya : '', 'Uang Fisik': T?.fisik ?? '', Selisih: T?.selisih ?? '', Setor: T?.setor ?? '', 'Kasir Tutup': T?.kasir ?? '' }; }));
-  add('Transaksi', M.tx.slice().sort((a, b) => a.at.localeCompare(b.at)).map(t => ({ Nota: t.nota, Tanggal: t.tgl, Jam: jam(t.at), Layanan: t.layanan, Harga: t.harga, Diskon: t.diskon || 0, 'Ket Promo': t.ketPromo || '', Total: t.batal ? 0 : t.total, Bayar: t.bayar, Kapster: t.kapster, Kasir: t.kasir, Pelanggan: t.pelanggan || '', WA: showWA(t.wa), Status: t.batal ? 'BATAL: ' + t.batalAlasan : 'OK' })));
+  add('Transaksi', M.tx.slice().sort((a, b) => a.at.localeCompare(b.at)).map(t => ({ Nota: t.nota, Tanggal: t.tgl, Jam: tjam(t), Layanan: t.layanan, Harga: t.harga, Diskon: t.diskon || 0, 'Ket Promo': t.ketPromo || '', Total: t.batal ? 0 : t.total, Bayar: t.bayar, Kapster: t.kapster, Kasir: t.kasir, Pelanggan: t.pelanggan || '', WA: showWA(t.wa), Status: t.batal ? 'BATAL: ' + t.batalAlasan : 'OK' })));
   add('Pengeluaran', DB.list('pengeluaran').filter(p => p.tgl.startsWith(M.ym)).sort((a, b) => a.at.localeCompare(b.at)).map(p => ({ Tanggal: p.tgl, Jam: jam(p.at), Kategori: p.kategori, Keterangan: p.ket, Nominal: p.batal ? 0 : p.nominal, Kasir: p.kasir, Status: p.batal ? 'BATAL' : 'OK' })));
   add('Per Layanan', Object.entries(M.perLay).map(([k, v]) => ({ Layanan: k, Kepala: v.n, Pendapatan: v.v })));
   add('Per Kapster', Object.entries(M.perKap).map(([k, v]) => ({ Kapster: k, Kepala: v.n, Pendapatan: v.v })));
