@@ -161,6 +161,9 @@ nav.bot button.sel{color:var(--gold2)}
 .dlabel small.past{color:var(--warn)}
 .dlabel input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:0}
 .card.lock{border-color:#e4cfa6;background:#fbf3e2}
+.svc button.lain{border-style:dashed;background:transparent}
+.svc button.lain .nm{color:var(--ink)}
+.svc button.lain .pr{font-size:14px;color:var(--muted);font-weight:700}
 
 </style>
 </head>
@@ -467,20 +470,21 @@ function vKasir() {
       <div class="stat"><span>QRIS</span><b>${rp(sum(t => t.bayar === 'QRIS'))}</b></div>
     </div>
     ${canInput ? `<section class="sec"><h2>Pilih layanan</h2>
-      <div class="svc">${layananAktif().map(l => `<button data-lay="${l.id}"><span class="nm">${esc(l.nama)}</span><span class="pr">${rp(l.harga)}</span><span class="ds">${esc(l.ket || '')}</span></button>`).join('')}</div>
+      <div class="svc">${layananAktif().map(l => `<button data-lay="${l.id}"><span class="nm">${esc(l.nama)}</span><span class="pr">${rp(l.harga)}</span><span class="ds">${esc(l.ket || '')}</span></button>`).join('')}
+        <button data-lay="__lain" class="lain"><span class="nm">Layanan lain</span><span class="pr">Harga manual</span><span class="ds">Untuk layanan yang tidak ada di daftar</span></button></div>
     </section>` : ''}
     <section class="sec"><div class="row between"><h2>Transaksi ${now ? 'hari ini' : 'tanggal ini'}</h2><span class="small muted">${tx.length} nota</span></div>
       <div class="list">${tx.length ? tx.slice().reverse().map(txRow).join('') : `<div class="empty">${canInput ? 'Belum ada transaksi. Pilih layanan di atas untuk mulai.' : 'Tidak ada transaksi.'}</div>`}</div>
     </section>`;
   bindDateBar();
-  m.querySelectorAll('[data-lay]').forEach(b => b.onclick = () => openTx(DB.get(b.dataset.lay)));
+  m.querySelectorAll('[data-lay]').forEach(b => b.onclick = () => openTx(b.dataset.lay === '__lain' ? { id: null, nama: '', harga: 0, manual: true } : DB.get(b.dataset.lay)));
   m.querySelectorAll('[data-tx]').forEach(b => b.onclick = () => openTxDetail(DB.get(b.dataset.tx)));
   $('#gantiKasir') && ($('#gantiKasir').onclick = pilihKasir);
   $('#goTutup') && ($('#goTutup').onclick = () => { S.tab = 'tutup'; render(); });
 }
 function txRow(t) {
   return `<button class="item ${t.batal ? 'void' : ''}" data-tx="${t.id}">
-    <div class="main"><div class="t">${esc(t.layanan)} · ${esc(t.kapster)}</div>
+    <div class="main"><div class="t">${esc(t.layanan)}${t.layananManual ? ' <span class="tag gold">MANUAL</span>' : ''} · ${esc(t.kapster)}</div>
     <div class="s">${t.nota} · ${tjam(t)}${t.pelanggan ? ' · ' + esc(t.pelanggan) : ''}${t.diskon ? ' · promo ' + esc(t.ketPromo || '') : ''}</div></div>
     ${t.batal ? '<span class="tag void">BATAL</span>' : `<span class="tag ${t.bayar === 'QRIS' ? 'qris' : 'tunai'}">${t.bayar}</span>`}
     <div class="v">${rp(t.total)}</div></button>`;
@@ -551,6 +555,7 @@ function pilihKasir() {
 
 /* ---------- form transaksi ---------- */
 function openTx(lay) {
+  lay = { ...lay };
   const T = { lay, kapster: '', bayar: '', pel: null, baru: { nama: '', wa: '' }, diskon: 0, ket: '', q: '' };
   const sh = openSheet('<div id="txb"></div>');
   const draw = () => {
@@ -559,7 +564,11 @@ function openTx(lay) {
     const hits = q.length >= 2 ? DB.list('pelanggan').filter(p => p.nama.toLowerCase().includes(q) || (qd.length >= 3 && (p.wa || '').includes(qd.replace(/^0/, '')))).slice(0, 5) : [];
     sh.querySelector('#txb').innerHTML = `
       <div class="sec">
-      <div class="hd"><div><h2>Transaksi baru</h2><h1>${esc(lay.nama)} · ${rp(lay.harga)}</h1></div><button class="x" id="cx">×</button></div>
+      <div class="hd"><div><h2>Transaksi baru</h2><h1>${lay.manual ? 'Layanan lain' : esc(lay.nama) + ' · ' + rp(lay.harga)}</h1></div><button class="x" id="cx">×</button></div>
+      ${lay.manual ? `<div class="card sec lock" style="gap:8px">
+        <label class="f">Nama layanan<input id="mn" class="in" placeholder="mis. Cukur jenggot, Cat rambut" value="${esc(lay.nama)}"></label>
+        <label class="f">Harga<input id="mh" class="in big" inputmode="numeric" placeholder="0" value="${lay.harga ? lay.harga.toLocaleString('id-ID') : ''}"></label>
+        <div class="small muted">Layanan ini ditandai "manual" di laporan supaya owner bisa mengecek.</div></div>` : ''}
       <label class="f">Kapster</label>${kasirChips(T.kapster, 'kapchips')}
       <label class="f">Pembayaran</label>
       <div class="seg"><button data-b="Tunai" class="${T.bayar === 'Tunai' ? 'sel' : ''}">Tunai</button><button data-b="QRIS" class="${T.bayar === 'QRIS' ? 'sel' : ''}">QRIS</button></div>
@@ -575,6 +584,11 @@ function openTx(lay) {
       <button class="btn gold" id="save">Simpan Transaksi</button>
       </div>`;
     sh.querySelector('#cx').onclick = closeSheet;
+    const mn = sh.querySelector('#mn'), mh = sh.querySelector('#mh');
+    if (mn) {
+      mn.oninput = () => { lay.nama = mn.value; };
+      mh.oninput = () => { lay.harga = parseNum(mh.value); mh.value = lay.harga ? lay.harga.toLocaleString('id-ID') : ''; T.diskon = Math.min(T.diskon, lay.harga); sh.querySelector('.total b').textContent = rp(Math.max(0, lay.harga - T.diskon)); };
+    }
     bindChips(sh, 'kapchips', (n) => { if (n) { T.kapster = n; lsSet('nb_lastKap', n); } draw(); });
     sh.querySelectorAll('[data-b]').forEach(b => b.onclick = () => { T.bayar = b.dataset.b; draw(); });
     const pq = sh.querySelector('#pq');
@@ -584,7 +598,7 @@ function openTx(lay) {
     const bn = sh.querySelector('#bn'), bw = sh.querySelector('#bw');
     bn && (bn.oninput = () => T.baru.nama = bn.value); bw && (bw.oninput = () => T.baru.wa = bw.value);
     const dk = sh.querySelector('#dk'), dkk = sh.querySelector('#dkk');
-    dk.oninput = () => { T.diskon = Math.min(parseNum(dk.value), lay.harga); dk.value = T.diskon ? T.diskon.toLocaleString('id-ID') : ''; sh.querySelector('.total b').textContent = rp(lay.harga - T.diskon); };
+    dk.oninput = () => { T.diskon = Math.min(parseNum(dk.value), lay.harga); dk.value = T.diskon ? T.diskon.toLocaleString('id-ID') : ''; sh.querySelector('.total b').textContent = rp(Math.max(0, lay.harga - T.diskon)); };
     dkk.oninput = () => T.ket = dkk.value;
     sh.querySelector('#save').onclick = () => saveTx(T);
   };
@@ -592,6 +606,11 @@ function openTx(lay) {
 }
 
 function saveTx(T) {
+  if (T.lay.manual) {
+    T.lay.nama = T.lay.nama.trim();
+    if (!T.lay.nama) return toast('Isi nama layanannya');
+    if (!T.lay.harga) return toast('Isi harga layanannya');
+  }
   if (!T.kapster) return toast('Pilih kapster dulu');
   if (!T.bayar) return toast('Pilih metode pembayaran: Tunai atau QRIS');
   if (T.diskon && !T.ket.trim()) return toast('Isi keterangan promo');
@@ -605,7 +624,7 @@ function saveTx(T) {
   const tgl = today();
   const baru = pel ? !(pel.visits > 0) : null;
   const tx = {
-    id: uid('tx'), nota: nextNota(tgl), tgl, at: nowISO(), layananId: T.lay.id, layanan: T.lay.nama, harga: T.lay.harga,
+    id: uid('tx'), nota: nextNota(tgl), tgl, at: nowISO(), layananId: T.lay.id, layanan: T.lay.nama, layananManual: !!T.lay.manual, harga: T.lay.harga,
     diskon: T.diskon, ketPromo: T.diskon ? T.ket.trim() : '', total: Math.max(0, T.lay.harga - T.diskon), kapster: T.kapster,
     kasir: S.kasir, bayar: T.bayar, pelangganId: pel?.id || null, pelanggan: pel?.nama || '', wa: pel?.wa || '', pelangganBaru: baru,
     batal: false, log: []
@@ -1004,7 +1023,7 @@ async function renderDailyCanvas(tgl) {
     txt(t.batal ? 'BATAL' : t.bayar, cols[4], y, { c: t.batal ? C.bad : t.bayar === 'QRIS' ? C.qris : c }); F(700, 24); txt(rp(t.total), cols[5], y, { a: 'right', c });
     if (t.batal) { x.fillStyle = '#a39886'; x.fillRect(cols[0], y - 9, W - 2 * P, 2); }
     y += 30;
-    const sub = [t.diskon ? `promo ${t.ketPromo} −${rp(t.diskon)}` : '', t.batal ? `alasan batal: ${t.batalAlasan}` : '', t.pelanggan ? t.pelanggan : ''].filter(Boolean).join(' · ');
+    const sub = [t.layananManual ? 'layanan manual' : '', t.diskon ? `promo ${t.ketPromo} −${rp(t.diskon)}` : '', t.batal ? `alasan batal: ${t.batalAlasan}` : '', t.pelanggan ? t.pelanggan : ''].filter(Boolean).join(' · ');
     if (sub) { F(500, 19); txt(sub.slice(0, 80), cols[2], y, { c: C.muted }); y += 28; }
     y += 8;
   });
@@ -1253,7 +1272,7 @@ async function exportXLS(M) {
   const wb = XLSX.utils.book_new(), add = (name, rows) => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), name);
   const kas = Object.fromEntries(DB.list('kas').filter(k => k.tgl.startsWith(M.ym)).map(k => [k.tgl, k]));
   add('Rekap Harian', M.days.map(d => { const tgl = M.ym + '-' + pad(d.d), D = dayStats(tgl), T = kas[tgl]?.tutup; return { Tanggal: tgl, Kepala: d.n, Pemasukan: d.v, Tunai: D.tunai, QRIS: D.qris, Pengeluaran: D.totalPg, 'Modal': kas[tgl]?.modal ?? '', 'Kas Seharusnya': kas[tgl] ? D.seharusnya : '', 'Uang Fisik': T?.fisik ?? '', Selisih: T?.selisih ?? '', Setor: T?.setor ?? '', 'Kasir Tutup': T?.kasir ?? '' }; }));
-  add('Transaksi', M.tx.slice().sort((a, b) => a.at.localeCompare(b.at)).map(t => ({ Nota: t.nota, Tanggal: t.tgl, Jam: tjam(t), Layanan: t.layanan, Harga: t.harga, Diskon: t.diskon || 0, 'Ket Promo': t.ketPromo || '', Total: t.batal ? 0 : t.total, Bayar: t.bayar, Kapster: t.kapster, Kasir: t.kasir, Pelanggan: t.pelanggan || '', WA: showWA(t.wa), Status: t.batal ? 'BATAL: ' + t.batalAlasan : 'OK' })));
+  add('Transaksi', M.tx.slice().sort((a, b) => a.at.localeCompare(b.at)).map(t => ({ Nota: t.nota, Tanggal: t.tgl, Jam: tjam(t), Layanan: t.layanan + (t.layananManual ? ' (manual)' : ''), Harga: t.harga, Diskon: t.diskon || 0, 'Ket Promo': t.ketPromo || '', Total: t.batal ? 0 : t.total, Bayar: t.bayar, Kapster: t.kapster, Kasir: t.kasir, Pelanggan: t.pelanggan || '', WA: showWA(t.wa), Status: t.batal ? 'BATAL: ' + t.batalAlasan : 'OK' })));
   add('Pengeluaran', DB.list('pengeluaran').filter(p => p.tgl.startsWith(M.ym)).sort((a, b) => a.at.localeCompare(b.at)).map(p => ({ Tanggal: p.tgl, Jam: jam(p.at), Kategori: p.kategori, Keterangan: p.ket, Nominal: p.batal ? 0 : p.nominal, Kasir: p.kasir, Status: p.batal ? 'BATAL' : 'OK' })));
   add('Per Layanan', Object.entries(M.perLay).map(([k, v]) => ({ Layanan: k, Kepala: v.n, Pendapatan: v.v })));
   add('Per Kapster', Object.entries(M.perKap).map(([k, v]) => ({ Kapster: k, Kepala: v.n, Pendapatan: v.v })));
